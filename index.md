@@ -17,7 +17,7 @@ Here is a list of packages that will be used during the workshop.
 
 ## Module 1: Exploratory Data Analysis (EDA) and Feature Selection
 
-<a href="https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/slides/1_EDA/1_EDA.html" title="Module 1">Slides</a>
+<a href="module1/slides/1_EDA/1_EDA.html" title="Module 1">Slides</a>
 
 
 ## Module 2: Model Fitting and Evaluation
