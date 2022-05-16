@@ -1,0 +1,137 @@
+---
+title: "Electronic Health Record Phenotyping"
+subtitle: " Module 1: Exploratory data analysis and feature selection"
+author: "Siyue Yang and Jesse Gronsbell"
+institute: "University of Toronto"
+date: "SSC Workshop, June 5 2022"
+output:
+  xaringan::moon_reader:
+    css: 
+      - default
+      - css/nhsr.css
+      - css/nhsr-fonts.css
+    lib_dir: libs
+    seal: false
+    nature:
+      highlightStyle: googlecode
+      highlightLines: true
+      highlightLanguage: ["r"]
+      countIncrementalSlides: false
+      ratio: "16:9"
+    includes:
+      after_body: [css/insert-logo.html]
+---
+
+```{r setup, include = FALSE}
+#https://spcanelon.github.io/xaringan-basics-and-beyond/slides/day-01-basics.html?panelset1=extra-info&panelset4=remark.js2&panelset5=nhsrtheme2&panelset6=moon-reader2&panelset7=markdown2#14
+library(knitr)
+library(tidyverse)
+library(NHSRtheme)
+# set default options
+opts_chunk$set(echo = TRUE,
+               fig.width = 7.252,
+               fig.height = 4,
+               dpi = 300)
+```
+
+
+class: title-slide, left, bottom
+
+# `r rmarkdown::metadata$title`
+----
+## **`r rmarkdown::metadata$subtitle`**
+### `r rmarkdown::metadata$author`
+### `r rmarkdown::metadata$institute`
+### `r rmarkdown::metadata$date`
+
+---
+class: inverse, middle, center
+
+# Exploratory data analysis
+
+---
+
+# PheCAP data
+
+Data from Coronary Artery Disease (CAD) patients. 
+
+![](img/phecap.png)
+
+<!--https://github.com/yihui/xaringan/blob/master/inst/rmarkdown/templates/xaringan/skeleton/skeleton.Rmd -->
+
+https://celehs.github.io/PheCAP/
+
+---
+
+# Load data
+
+```{r}
+library(PheCAP)
+
+# Load data.
+data(ehr_data)
+data <- PhecapData(ehr_data, "healthcare_utilization", "label", 0.4, patient_id = "patient_id")
+data
+```
+
+--
+### Data overview
+
+- 10,000 patients and 587 features.
+- Label is subjective to missing. 
+- Split into training and validation set. 
+
+---
+
+# Examine data 
+
+```{r, eval = FALSE}
+data$frame %>% head() 
+```
+
+--
+
+![](img/ehrdata.png)
+--
+
+### Variable explanation
+
+- Labels: "label", whether the patient has the disease, **extracted by clinicians' chart review**
+
+--
+
+- Features: "main_ICD", "main_NLP" refers to total number of billing codes or NLP mentions of the disease
+
+--
+
+- Features: "healthcare_utilization" refers to total number of notes the patient has
+
+--
+
+- Features: “CODx” (n = 10), “NLPx” (n = 574) refers to the counts of a specific code or NLP term, extracted by SQL or NLP
+
+---
+
+# How is the data generated?
+
+
+
+---
+class: inverse, middle, center
+
+# Feature selection
+
+---
+
+# Rank correlation 
+
+
+---
+
+# Tail method
+
+---
+
+# Clustering method
+
+---
