@@ -105,6 +105,38 @@ data$frame %&gt;% head()
 
 # How is the data generated?
 
+---
+
+# Data structure for phenotyping
+
+.pull-left[
+
+### Labels `\(Y\)`
+
+* Available for `\(n\)` patients, `\(n = 181\)`
+  
+### Features `\(\mathbf{X}\)`
+
+* Available for `\(N\)` patients, `\(N = 10000\)`
+* Each patient has `\(p\)` features, `\(p = 587\)`
+
+&lt;br&gt;
+&lt;br&gt;
+
+]
+
+.pull-right[![](img/datastructure.png)]
+
+--
+
+.pull-left[
+
+### Porblem: Extreme missingness on `\(Y\)`
+
+- `\(n \ll N\)` so that `\(n/N \to 0\)` as `\(n \to \infty\)`
+- When `\(n \ll p\)`, supervised models can suffer from overfitting
+
+]
 
 
 ---
@@ -114,12 +146,80 @@ class: inverse, middle, center
 
 ---
 
+# Prepare data for modeling
+
+### Data spliting 
+
+- Split the data into train and test set. 
+- Fit the model on training set. 
+- Validate the model on test set. 
+
+--
+
+
+```r
+train_data &lt;- ehr_data %&gt;% filter(patient_id %in% data$training_set)
+train_x &lt;- train_data %&gt;% select(starts_with("COD") | starts_with("NLP"))
+train_y &lt;- train_data %&gt;% select(label) %&gt;% pull()
+```
+
+
+```r
+test_data &lt;- ehr_data %&gt;% filter(patient_id %in% data$validation_set) 
+test_y &lt;- test_data %&gt;% select(label) %&gt;% pull()
+```
+
+--
+
+### Data transformation
+
+- As the features are count data, eg. number of billing codes, it is better to perform transformation to make the distribution **less skewed**. 
+
+
+```r
+train_x &lt;- log(train_x + 1)
+```
+
+---
+
 # Rank correlation 
 
+
+```r
+rankCor &lt;- function (s, x, threshold = 0.15) {
+  
+  # s: N x 1 surrogates
+  # x: N x p features
+  # threshold: an constant for significant correlation 
+  
+  rank_cor &lt;- abs(cor(s, x,  method = "pearson"))
+  ind &lt;- which(rank_cor &gt; threshold)
+  return(ind)
+}
+```
 
 ---
 
 # Tail method
+
+Directly use functions from the PheCAP package. 
+
+
+```r
+# surrogates &lt;- list(
+#   PhecapSurrogate(
+#     variable_names = "main_ICD",
+#     lower_cutoff = 1, upper_cutoff = 10),
+#   PhecapSurrogate(
+#     variable_names = "main_NLP",
+#     lower_cutoff = 1, upper_cutoff = 10),
+#   PhecapSurrogate(
+#     variable_names = c("main_ICD", "main_NLP"),
+#     lower_cutoff = 1, upper_cutoff = 10))
+# 
+# feature_selected &lt;- phecap_run_feature_extraction(data, surrogates)
+# feature_selected
+```
 
 ---
 
