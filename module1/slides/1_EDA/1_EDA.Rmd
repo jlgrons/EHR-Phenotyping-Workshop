@@ -30,6 +30,7 @@ library(NHSRtheme)
 # set default options
 opts_chunk$set(echo = TRUE,
                warning = FALSE,
+               message = FALSE,
                fig.width = 7.252,
                fig.height = 4,
                dpi = 300)
@@ -133,6 +134,7 @@ https://celehs.github.io/PheCAP/
 ```{r}
 library(PheCAP)
 library(tidyverse)
+library(glmpath)
 
 # Load data.
 data(ehr_data)
@@ -371,38 +373,37 @@ class: inverse, middle, center
 
 # Prepare data for feature selection
 
-### Data spliting 
-
-- Split the data into train and test set. 
-- Fit the model on training set. 
-- Validate the model on test set. 
-
---
+### Prepare surrogates
 
 ```{r}
-train_data <- ehr_data %>% filter(patient_id %in% data$training_set)
-train_x <- train_data %>% select(starts_with("COD") | starts_with("NLP"))
-train_y <- train_data %>% select(label) %>% pull()
+sicd <- log(ehr_data$main_ICD + 1)
+snlp <- log(ehr_data$main_NLP + 1)
 ```
 
+### Prepare features to be selected
+
 ```{r}
-test_data <- ehr_data %>% filter(patient_id %in% data$validation_set) 
-test_y <- test_data %>% select(label) %>% pull()
+x <- data.matrix(ehr_data %>% select(starts_with("COD") | starts_with("NLP")))
 ```
 
---
-
-### Data transformation
-
-- As the features are count data, eg. number of billing codes, it is better to perform transformation to make the distribution **less skewed**. 
+### Transform the features
 
 ```{r}
-train_x <- log(train_x + 1)
+x <- log(x + 1)
+```
+
+### Load functions
+
+```{r}
+source("../../script/rankCor.R")
+source("../../script/extremeMethod.R")
+source("../../script/clusteringMethod.R")
+source("../../script/modelFitting.R")
 ```
 
 ---
 
-# 1. Rank correlation 
+# 1. Rank correlation (AFEP)
 
 #### Motivation: 
 
@@ -415,26 +416,19 @@ train_x <- log(train_x + 1)
 - Select feature $\mathbf{X}_j$ if the absolute rank correlation between $(S, \mathbf{X}_j)$ > threshold, $j = 1, \dots, p$ 
 - where $S$ is $S_{NLP}$ and $\mathbf{X}_j$ is the count of medical term $j$ mentioned.
 
---
 
 #### Implementation:
 
+Default threshold = 0.15
+
 ```{r}
-rankCor <- function (s, x, threshold = 0.15) {
-  
-  # s: N x 1 surrogates
-  # x: N x p features
-  # threshold: an constant for significant correlation 
-  
-  rank_cor <- abs(cor(s, x,  method = "pearson"))
-  ind <- which(rank_cor > threshold)
-  return(ind)
-}
+# AFEP_select <- rankCor(snlp, x, threshold = 0.15)
+# colnames(x)[AFEP_select]
 ```
 
 ---
 
-# 2. Tail method
+# 2. Tail method (SAFE)
 
 #### Motivation (Extreme assumption): 
 
@@ -459,36 +453,79 @@ ehr_data %>%
 ```
 ]
 
+---
+
+# 2. Tail method (SAFE, cont'd)
+
 #### Method: 
 
 - Convert discrete $S$ into binary $S_*$, eg. if $S \leq 1$, $S_* = 0$, if $S \geq 10$, $S_* = 1$
 - Fit LASSO $S_* \sim \mathbf{X}$
 
----
-# 2. Tail method (cont'd)
-
 #### Implementation:
 
-Directly use functions from the PheCAP package. 
+- Consider 3 different surrogates, and create binary $S_*$ based on 2.5 and 97.5 quantile of the surrogate. 
+- Repeated samples from the two extremes 400 times.
+- Fit adaptive LASSO $S \sim \mathbf{X}, S \in \{ S_{ICD}, S_{NLP}, S_{ICDNLP}\}$
+- Choose those appear more than 50% times (Majority voting). 
 
 ```{r}
-# surrogates <- list(
-#   PhecapSurrogate(
-#     variable_names = "main_ICD",
-#     lower_cutoff = 1, upper_cutoff = 10),
-#   PhecapSurrogate(
-#     variable_names = "main_NLP",
-#     lower_cutoff = 1, upper_cutoff = 10),
-#   PhecapSurrogate(
-#     variable_names = c("main_ICD", "main_NLP"),
-#     lower_cutoff = 1, upper_cutoff = 10))
-# 
-# feature_selected <- phecap_run_feature_extraction(data, surrogates)
-# feature_selected
+# SAFE_icd <- extreme_method(sicd, x)
+# SAFE_nlp <- extreme_method(snlp, x)
+# SAFE_both <- extreme_method(cbind(sicd, snlp), x)
+# beta <- rbind(SAFE_icd$beta_all, SAFE_nlp$beta_all, SAFE_both$beta_all)
+# safe_select <- which(colMeans(beta, na.rm = T) >= 0.5)
+# colnames(x)[safe_select]
 ```
 
 ---
 
-# Clustering method
+# 3. Clustering method
+
+#### Motivation:
+
+- Focus on non-binary and/or multiple surrogates. 
+
+#### Method:
+
+- Estimate $\pi_S = P(Y=1|S_{ICD}, S_{NLP})$ using Gaussian mixture models
+- Fit adaptive LASSO $\hat{\pi}_S \sim \mathbf{X}$.
+
+#### Implementation:
+
+```{r}
+# system.time(Auto <- clustering_method(cbind(sicd, snlp), x))
+# Auto_select <- Auto$beta_select
+# colnames(x)[Auto_select]
+```
 
 ---
+class: inverse, middle, center
+
+# Review exercises and discussion
+
+---
+
+.left-column[
+## Let's code
+[15:00 mins](https://flipclock.us/#/c/0h15m0s)
+]
+
+.right-column[
+### Exercise 1
+
+- Run the R script `ex1.R` containing all the methods introduced above. 
+- Examine how many features each method select. 
+
+### Exercise 2
+
+- Change the parameter values for each method
+- for correlation method, try different threshold values
+- for tail method, try different upper/lower bound values for surrogates, or try different proportion for majority voting.
+
+### Exercise 3
+
+- (Advanced) Identify what features are selected by all of the three methods. 
+- Hint: 'UpSetR::upset()'. 
+]
+
