@@ -29,6 +29,7 @@ library(tidyverse)
 library(NHSRtheme)
 # set default options
 opts_chunk$set(echo = TRUE,
+               warning = FALSE,
                fig.width = 7.252,
                fig.height = 4,
                dpi = 300)
@@ -47,13 +48,77 @@ class: title-slide, left, bottom
 ---
 class: inverse, middle, center
 
-# Exploratory data analysis
+# The goal of phenotyping
+
+## To predict patients' disease status from <br> electronic health record data
+
+---
+
+# Overview of the phenotyping process
+
+![](img/process.png)
+
+---
+
+class: inverse, middle, center
+
+# Data preparation and processing
+
+---
+
+# How to prepare the data?
+
+Suppose we are interested in phenotyping Coronary Artery Disease (CAD), a disease that develops when the major blood vessels that supply heart become damaged or diseased.  
+
+--
+
+.pull-left[
+### Filtering/Screening 
+
+- From a random sample of patients in the EHR warehouse (eg. 4.6 million patients in Partner's EHR database) 
+
+- Filter patients who are likely to have the CAD 
+]
+
+.pull-right[
+![](img/processing.png)
+]
+
+---
+
+# Possible filters 
+
+.pull-left[
+
+### Structured data
+
+- Processed by SQL
+
+- Filter: $\geq 1$ ICD-9 codes for CAD (410.x, 411.x, 412.x, 414.x, 413.x)
+
+### Unstructured data
+
+- Processed by natural language processing (NLP) software
+
+- Filter: $\geq 1$ NLP mentions for any CAD related concepts (CAD, CAD procedures, CAD biomarkers, positive stress test)
+]
+
+.pull-right[
+![](img/processing.png)
+]
+
+---
+class: inverse, middle, center
+
+# PheCAP data
+
+## A public released dataset from an R package
 
 ---
 
 # PheCAP data
 
-Data from Coronary Artery Disease (CAD) patients. 
+Contains data prepared for phenotyping Coronary Artery Disease (CAD). 
 
 ![](img/phecap.png)
 
@@ -67,6 +132,7 @@ https://celehs.github.io/PheCAP/
 
 ```{r}
 library(PheCAP)
+library(tidyverse)
 
 # Load data.
 data(ehr_data)
@@ -86,7 +152,7 @@ data
 # Examine data 
 
 ```{r, eval = FALSE}
-data$frame %>% head() 
+ehr_data %>% head() 
 ```
 
 --
@@ -112,10 +178,6 @@ data$frame %>% head()
 
 ---
 
-# How is the data generated?
-
----
-
 # Data structure for phenotyping
 
 .pull-left[
@@ -130,7 +192,6 @@ data$frame %>% head()
 * Each patient has $p$ features, $p = 587$
 
 <br>
-<br>
 
 ]
 
@@ -140,22 +201,175 @@ data$frame %>% head()
 
 .pull-left[
 
-### Porblem: Extreme missingness on $Y$
+### Porblem 1: Extreme missingness on $Y$
 
 - $n \ll N$ so that $n/N \to 0$ as $n \to \infty$
+
+### Problem 2: High-dimensional features
+
 - When $n \ll p$, supervised models can suffer from overfitting
 
 ]
 
+---
+
+# Can we leverage information from features?
+
+### Findings
+
+- Feature "main_ICD" = the total number of the disease-related billing codes. 
+
+--
+
+- The more the diesase-related codes, the more **likely** the patient has the disease.
+
+--
+
+- The assumption should remain the same for feature "main_NLP"
+
+--
+
+<br>
+<br>
+
+### Let's plot the density of "main_ICD" stratified by patients having the disease or not!
+
+---
+
+# Density of ICD main
+
+--
+
+.pull-left[
+```{r}
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = main_ICD)) +
+  geom_density(aes(color = disease))
+```
+]
+
+--
+
+.pull-right[
+```{r}
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = log(main_ICD+1))) +
+  geom_density(aes(color = disease))
+```
+]
+
+--
+
+### The more main_ICD the patient has, the more likely s/he has the disease! 
+
+---
+
+# Other potential indicators
+
+--
+
+.pull-left[
+### log(main_NLP + 1)
+
+```{r}
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = log(main_NLP+1))) +
+  geom_density(aes(color = disease))
+```
+]
+
+--
+
+.pull-right[
+### log(main_NLP + main_ICD + 1)
+
+```{r}
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = log(main_ICD+main_NLP+1))) +
+  geom_density(aes(color = disease))
+```
+]
+
+---
+
+# New data structure for phenotyping
+
+.pull-left[
+
+### Labels $Y$
+
+* Available for $n$ patients, $n = 181$
+  
+### Features $\mathbf{X}$
+
+* Available for $N$ patients, $N = 10000$
+
+### Surrogate features $\mathbf{S}$
+
+* Available for $N$ patients, $N = 10000$
+* Can predict $Y$ with moderate precision
+* $S_{NLP} = \text{main_NLP}$, 
+  $S_{ICD} = \text{main_ICD}$,
+  $S_{ICDNLP} = \text{main_ICD + main_NLP}$
+
+<br>
+<br>
+
+]
+
+.pull-right[![](img/newstructure.png)]
+
+---
+
+# Challenges of the data 
+
+1. Extreme missingness on $Y$: $n \ll N$ so that $n/N \to 0$ as $n \to \infty$
+
+2. High-dimensional features: when $n \ll p$, supervised models can suffer from overfitting
+
+<br>
+<br>
+
+--
+
+# Opportunities of using surrogate features
+
+1. Feature selection to reduce $p$
+
+2. Algorithm development with limited $Y$
+
+3. Algorithm validation with limited $Y$
+
+<br>
+<br>
+
+--
+
+### Opportunity 2 and 3 will be covered in the next module! 
 
 ---
 class: inverse, middle, center
 
 # Feature selection
+<br>
+<br>
+
+
+### 1. Rank correlation (Yu et al. 2015)
+### 2. Tail method (Yu et al. 2017)
+### 3. Clustering method (Gronsbell et al. 2019)
 
 ---
 
-# Prepare data for modeling
+# Prepare data for feature selection
 
 ### Data spliting 
 
@@ -188,7 +402,22 @@ train_x <- log(train_x + 1)
 
 ---
 
-# Rank correlation 
+# 1. Rank correlation 
+
+#### Motivation: 
+
+- Select features that are highly related to surrogates. 
+
+--
+
+#### Method: 
+
+- Select feature $\mathbf{X}_j$ if the absolute rank correlation between $(S, \mathbf{X}_j)$ > threshold, $j = 1, \dots, p$ 
+- where $S$ is $S_{NLP}$ and $\mathbf{X}_j$ is the count of medical term $j$ mentioned.
+
+--
+
+#### Implementation:
 
 ```{r}
 rankCor <- function (s, x, threshold = 0.15) {
@@ -205,7 +434,40 @@ rankCor <- function (s, x, threshold = 0.15) {
 
 ---
 
-# Tail method
+# 2. Tail method
+
+#### Motivation (Extreme assumption): 
+
+- Patients with **high** main ICD or NLP mentions generally have the phenotype.
+- Patients with **extremely** low counts are unlikely to have the phenotype.
+
+.pull-left[
+```{r plot-right, fig.show = 'hide'}
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = main_ICD + main_NLP)) +
+  geom_density(aes(color = disease)) +
+  theme_bw() + 
+  annotate("rect", fill = "grey", alpha = 0.7, xmin = 1, xmax = 10, ymin = -Inf, ymax = Inf) +
+  xlim(c(0,15))
+```
+]
+
+.pull-right[
+```{r ref.label = 'plot-right', echo = FALSE}
+```
+]
+
+#### Method: 
+
+- Convert discrete $S$ into binary $S_*$, eg. if $S \leq 1$, $S_* = 0$, if $S \geq 10$, $S_* = 1$
+- Fit LASSO $S_* \sim \mathbf{X}$
+
+---
+# 2. Tail method (cont'd)
+
+#### Implementation:
 
 Directly use functions from the PheCAP package. 
 
