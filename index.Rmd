@@ -34,7 +34,7 @@ In this workshop, we will introduce statistical learning methods designed to exp
 [Exerciese 1](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/Exercises/ex1.R)
 </aside>
 
-- **Module 2** Model Fitting and Evaluation  ([Slides](https://jlgrons.github.io/EHR-Phenotyping-Workshop/module1/2_Model.html))
+- **Module 2** Model Fitting and Evaluation  ([Slides](https://jlgrons.github.io/EHR-Phenotyping-Workshop/module2/2_Model.html))
 
 <aside>
 [Exerciese 2](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/Exercises/ex2.R)
