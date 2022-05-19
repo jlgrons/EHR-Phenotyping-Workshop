@@ -172,3 +172,31 @@ sum.I <-function(yy, FUN, Yi, Vi=NULL, ties.method = "first")
     return(rbind(0,Vi)[pos+1,])
   } else return(pos)
 }
+
+
+# Function to validate model.
+validate_model <- function(train_y, test_y, train_y_hat, test_y_hat) {
+  train_roc <- roc(train_y, train_y_hat)
+  test_roc <- roc(test_y, test_y_hat)
+  
+  train_auc <- auc(train_roc)
+  train_auc_ci <- ci(train_auc, method = "bootstrap", boot.n = 500, boot.stratified = F)
+  train_auc_ci <- round(train_auc_ci, 3)
+  train_auc <- train_auc_ci[2]
+  train_auc_ci_len <- as.numeric(abs(train_auc_ci[3] - train_auc_ci[1]))
+  train_auc_ci <- paste0("(", train_auc_ci[1], ",", train_auc_ci[3], ")")
+  
+  test_auc <- auc(test_roc)
+  test_auc_ci <- ci(test_auc, method = "bootstrap", boot.n = 500, boot.stratified = F)
+  test_auc_ci <- round(test_auc_ci, 3)
+  test_auc <- test_auc_ci[2]
+  test_auc_ci_len <- as.numeric(test_auc_ci[3] - test_auc_ci[1])
+  test_auc_ci <- paste0("(", test_auc_ci[1], ",", test_auc_ci[3], ")")
+  
+  return(list(train_AUC = train_auc,
+              train_CI = train_auc_ci,
+              train_CI_length = train_auc_ci_len,
+              test_AUC = test_auc, 
+              test_CI = test_auc_ci,
+              test_CI_length = test_auc_ci_len))
+}

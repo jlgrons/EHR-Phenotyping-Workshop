@@ -1,6 +1,6 @@
 ---
 title: "Electronic Health Record Phenotyping"
-subtitle: " Module 1: Exploratory data analysis and feature selection"
+subtitle: " Module 1: Data processing and feature selection"
 author: "Siyue Yang and Jesse Gronsbell"
 institute: "University of Toronto"
 date: "SSC Workshop, June 5 2022"
@@ -395,10 +395,10 @@ x <- log(x + 1)
 ### Load functions
 
 ```{r}
-source("../../script/rankCor.R")
-source("../../script/extremeMethod.R")
-source("../../script/clusteringMethod.R")
-source("../../script/modelFitting.R")
+source("../Rscripts/rankCor.R")
+source("../Rscripts/extremeMethod.R")
+source("../Rscripts/clusteringMethod.R")
+source("../Rscripts/modelFitting.R")
 ```
 
 ---
@@ -520,8 +520,8 @@ class: inverse, middle, center
 ### Exercise 2
 
 - Change the parameter values for each method
-- for correlation method, try different threshold values
-- for tail method, try different upper/lower bound values for surrogates, or try different proportion for majority voting.
+- For correlation method, try different threshold values
+- For tail method, try different upper/lower bound values for surrogates, or try different proportion for majority voting.
 
 ### Exercise 3
 
