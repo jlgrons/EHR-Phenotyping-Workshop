@@ -1,0 +1,18 @@
+---
+name: "EHR-Phenotyping-Workshop"
+title: "Electronic Health Records Phenotyping"
+theme: theme.css
+navbar:
+  right:
+    - text: "2022 SSC Annual Meeting"
+      href: https://ssc.ca/en/meetings/annual/2022-annual-meeting
+    - text: "Slides"
+      menu:
+        - text: "Module 1: Feature selection"
+          href: "module1/1_EDA.html"
+        - text: "Module 2: Modle fitting and validation"
+          href: "module2/2_Model.html"
+    - icon: fab fa-github
+      href: https://github.com/jlgrons/EHR-Phenotyping-Workshop
+output: distill::distill_article
+---

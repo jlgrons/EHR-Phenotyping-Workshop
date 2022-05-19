@@ -1,0 +1,78 @@
+---
+title: "Electronic Health Records Phenotyping"
+description: |
+  SSC Annual Meeting 2022 Biostatistics Workshop
+author: 
+- name: Jessica Gronsbell, Ph.D.
+  url: https://sites.google.com/view/jgronsbell/home?authuser=0
+  affiliation: University of Toronto
+  affiliation_url: https://www.statistics.utoronto.ca/
+- name: Siyue Yang
+date: June 5th, 2022
+site: distill::distill_website
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+# Learn more about creating websites with Distill at:
+# https://rstudio.github.io/distill/website.html
+
+# Learn more about publishing to GitHub Pages at:
+# https://rstudio.github.io/distill/publish_website.html#github-pages
+```
+
+# Welcome
+
+This website contains materials for Biostatistics Workshop in [2022 SSC Annual Meeting Online](https://ssc.ca/en/meetings/annual/2022-annual-meeting). 
+
+In this workshop, we will introduce statistical learning methods designed to expedite the phenotyping process in order to improve the scalability of EHR research. 
+
+- **Module 1** Exploratory Data Analysis (EDA) and Feature Selection ([Slides](https://jlgrons.github.io/EHR-Phenotyping-Workshop/module1/1_EDA.html))
+
+<aside>
+[Exerciese 1](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/Exercises/ex1.R)
+</aside>
+
+- **Module 2** Model Fitting and Evaluation  ([Slides](https://jlgrons.github.io/EHR-Phenotyping-Workshop/module1/2_Model.html))
+
+<aside>
+[Exerciese 2](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/Exercises/ex2.R)
+</aside>
+
+### PheCAP
+
+We will use the real EHR data examples from PheCAP package. 
+
+The [PheCAP](https://celehs.github.io/PheCAP/) is an R package that implements high-throughput phenotyping with electronic health record (EHR) using a common automated pipeline.  It contains simulated data and real EHR data examples, with structured data and information extracted from the narrative clinical notes using natural language processing (NLP). 
+
+### Required packages
+
+Here is a list of packages that will be used during the workshop. 
+
+```{r, eval=FALSE, echo=TRUE}
+# From CRAN
+install.packages("PheCAP")
+install.packages("tidyverse")
+```
+
+
+# Resources
+
+- Publicly available EHR dataset
+
+  - Physionet 
+  - n2n2 competitions
+  
+- NLP software
+  - cTAKES
+  - clinspacy
+  - medspacy
+  
+
+# Acknowledgments {.appendix}
+
+This website was made with the [distill package](https://rstudio.github.io/distill/), drawn mostly from Silvia Canelón’s [Sharing Your Work with xaringan](https://spcanelon.github.io/xaringan-basics-and-beyond/). 
+
+
+

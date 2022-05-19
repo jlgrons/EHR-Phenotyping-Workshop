@@ -14,7 +14,7 @@ rankCor <- function (s, x, threshold = 0.15) {
   # x: N x p features
   # threshold: an constant for significant correlation 
   
-  rank_cor <- abs(cor(s, x,  method = "pearson"))
+  rank_cor <- abs(cor(s, x,  method = "spearman"))
   ind <- which(rank_cor > threshold)
   return(ind)
 }
