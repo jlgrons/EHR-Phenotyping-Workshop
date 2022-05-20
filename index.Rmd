@@ -42,9 +42,7 @@ In this workshop, we will introduce statistical learning methods designed to exp
 
 ### PheCAP
 
-We will use the real EHR data examples from PheCAP package. 
-
-The [PheCAP](https://celehs.github.io/PheCAP/) is an R package that implements high-throughput phenotyping with electronic health record (EHR) using a common automated pipeline.  It contains simulated data and real EHR data examples, with structured data and information extracted from the narrative clinical notes using natural language processing (NLP). 
+We will use the real EHR data examples from [PheCAP](https://celehs.github.io/PheCAP/), an R package that implements high-throughput phenotyping with electronic health record (EHR) using a common automated pipeline.. 
 
 ### Required packages
 
@@ -53,7 +51,14 @@ Here is a list of packages that will be used during the workshop.
 ```{r, eval=FALSE, echo=TRUE}
 # From CRAN
 install.packages("PheCAP")
+install.packages("PheNorm")
+install.packages("MAP")
+
 install.packages("tidyverse")
+
+install.packages("glmnet")
+install.packages("randomForestSRC")
+install.packages("pROC")
 ```
 
 
