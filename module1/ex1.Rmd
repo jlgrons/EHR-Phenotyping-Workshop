@@ -1,0 +1,398 @@
+---
+title: "Electronic Health Record Phenotyping"
+subtitle: " Module 1: Data processing and feature selection"
+author: "Siyue Yang and Jesse Gronsbell"
+institute: "University of Toronto"
+date: "SSC Workshop, June 5 2022"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The goal of phenotyping is to predict patients' disease status from electronic health record data. 
+
+In this module, we will go through a public released dataset from an R package PheCAP to get hands-on experience of phenotyping. 
+
+
+# PheCAP 
+
+https://celehs.github.io/PheCAP/
+
+The most likely explanation is that this is a random sample of patients (for public release from a previous study) in the Partner’s EHR database (4.6 million patients) with diabetes mellitus (DM) and who met 
+
+(i) an initial filter for CAD: ≥1 ICD9 code for CAD (410.x, 411.x, 412.x, 414.x, 413.x), 
+or 
+(ii) ≥1 NLP mention for any CAD related concepts: CAD, CAD procedures, CAD biomarkers, positive stress test. 
+
+
+```{r}
+library(PheCAP)
+library(tidyverse)
+library(corrplot)
+```
+
+```{r}
+# Load helper functions.
+source("../Rscripts/helper_function.R")
+```
+
+# PheCAP data
+
+```{r}
+data(ehr_data)
+data <- PhecapData(ehr_data, "healthcare_utilization", "label", 0.4, patient_id = "patient_id")
+data
+```
+
+What do you observe?
+
+- 10,000 patients and 587 features.
+- Label is subjective to missing. 
+- Split into training and validation set. 
+
+
+# Elementary data exploration
+
+```{r}
+ehr_data %>% head() 
+```
+
+- Labels: "label", whether the patient has the disease, **extracted by clinicians' chart review**
+
+- Features: "main_ICD", "main_NLP" refers to total number of billing codes or NLP mentions of the disease
+
+- Features: "healthcare_utilization" refers to total number of notes the patient has
+
+- Features: “CODx” (n = 10), “NLPx” (n = 574) refers to the counts of a specific code or NLP term, extracted by SQL or NLP
+
+
+## What is the prevalence of labels?
+
+```{r}
+mean(ehr_data$label, na.rm = TRUE)
+```
+
+## How features are distributed?
+
+- Let's randomly sample a few features first.
+- Observe the densities. 
+
+```{r}
+feature_index <- sample(c(3:ncol(ehr_data)), 20, replace = FALSE)
+ehr_data[, feature_index] %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "count") %>%
+  ggplot() +
+  geom_density(aes(x = count, color = feature)) 
+```
+
+Too skewed?
+
+```{r}
+feature_index <- sample(c(3:ncol(ehr_data)), 20, replace = FALSE)
+
+ehr_data[, feature_index] %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "count") %>%
+  ggplot() +
+  geom_density(aes(x = log(count + 1), color = feature)) 
+```
+
+Features are distributed very close to 0.
+
+- Why using `log(count + 1)`?
+
+## How many features are 0?
+
+```{r}
+features <- ehr_data[, c(3:ncol(ehr_data))]
+feature_0_rate <- colMeans(features == 0)
+
+head(feature_0_rate, 10)
+```
+
+```{r}
+plot(density(feature_0_rate))
+```
+
+Most of the features have count 0 for most of the patients. 
+
+## What are correlations between features?
+
+```{r}
+feature_cor <- cor(features[feature_index])
+corrplot::corrplot(feature_cor)
+```
+
+## What about codified data?
+
+```{r}
+feature_cor <- cor(features[4:13])
+corrplot::corrplot(feature_cor)
+```
+
+After some initial plotting, we get a sense of the basic structure of data for phenotyping:
+
+Label (Y): 
+* Available for n patients, n = 181
+
+Features (X):
+* Available for N patients, N = 10000
+* Each patient has p features, p = 587
+
+## Porblem 1: Extreme missingness on $Y$
+
+```{r}
+n <- 181
+N <- 10000
+n/N
+```
+
+Missing rate is 0.0181. 
+
+## Problem 2: High-dimensional features
+
+If fit a supervised model when both Y and X are available, we have
+- 181 samples
+- 587 features
+
+Suffer from overfitting.
+
+One option is to perform feature selection before model fitting.
+
+
+# Feature selection. 
+
+## How to select features? 
+
+Can leverage some clinical-meaningful features that are related to Y.
+
+e.g. Feature "main_ICD" = the total number of the disease-related billing codes. 
+
+```{r}
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = main_ICD)) +
+  geom_density(aes(color = disease))
+
+# With log transformation.
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = log(main_ICD + 1))) +
+  geom_density(aes(color = disease))
+```
+
+The more the disease-related codes, the more **likely** the patient has the disease.
+
+```{r}
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = log(main_NLP + 1))) +
+  geom_density(aes(color = disease))
+```
+
+Other options?
+- Combine them. 
+
+```{r}
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = log(main_ICD+main_NLP+1))) +
+  geom_density(aes(color = disease))
+```
+
+We call these highly predictive features of the true disease status "surrogates".
+
+## Opportunities of using surrogate features
+
+1. Feature selection to reduce $p$
+
+2. Algorithm development with limited $Y$
+
+3. Algorithm validation with limited $Y$
+
+Opportunity 2 and 3 will be covered in the next module! 
+
+
+# Feature selection method. 
+
+1. Rank correlation (Yu et al. 2015)
+2. Tail method (Yu et al. 2017)
+3. Clustering method (Gronsbell et al. 2019)
+
+
+## Prepare data for feature selection
+
+### Prepare surrogates
+
+```{r}
+sicd <- log(ehr_data$main_ICD + 1)
+snlp <- log(ehr_data$main_NLP + 1)
+sicdnlp <- log(ehr_data$main_ICD + ehr_data$main_NLP + 1)
+```
+
+```{r}
+length(sicd)
+```
+
+Surrogates are available for all the patients!
+
+### Prepare features to be selected
+
+```{r}
+x <- data.matrix(ehr_data %>% select(starts_with("COD") | starts_with("NLP")))
+```
+
+### Transform the features
+
+```{r}
+x <- log(x + 1)
+```
+
+
+## 1. Rank correlation.
+
+## Motivation: 
+
+- Select features that are highly related to surrogates. 
+- If the absolute rank correlation between (S, X) > threshold, select. 
+
+Use `main_nlp` as a surrogate to select features. 
+
+```{r}
+rankCor(snlp, x, threshold = 0.15)
+```
+
+It returns the index of X.
+
+What are the feature names?
+
+```{r}
+AFEP_select <- rankCor(snlp, x, threshold = 0.15)
+AFEP_feature <- colnames(x)[AFEP_select]
+AFEP_feature
+```
+
+Change the threshold, what do you observe?
+
+```{r}
+AFEP_select_0.5 <- rankCor(snlp, x, threshold = 0.5)
+AFEP_feature_0.5 <- colnames(x)[AFEP_select_0.5]
+AFEP_feature_0.5
+```
+
+```{r}
+AFEP_select_0.1 <- rankCor(snlp, x, threshold = 0.1)
+AFEP_feature_0.1 <- colnames(x)[AFEP_select_0.1]
+AFEP_feature_0.1
+```
+
+Exercise: try using `main_ICD` surrogates, or the sum of the two. 
+
+
+## 2. Tail method.
+
+## Motivation (Extreme assumption): 
+
+- Patients with **high** main ICD or NLP mentions generally have the phenotype.
+- Patients with **extremely** low counts are unlikely to have the phenotype.
+
+```{r plot-right, fig.show = 'hide'}
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = main_NLP)) +
+  geom_density(aes(color = disease)) +
+  theme_bw() + 
+  annotate("rect", fill = "grey", alpha = 0.7, xmin = 1, xmax = 10, ymin = -Inf, ymax = Inf) +
+  xlim(c(0,15))
+```
+
+- Left white rect: patients not having the disease.
+- Right white rect: patients having the disease. 
+
+```{r}
+SAFE_icd <- extreme_method(sicd, x, u_bound = 10, l_bound = 1)
+SAFE_nlp <- extreme_method(snlp, x, u_bound = 10, l_bound = 1)
+SAFE_both <- extreme_method(cbind(sicd, snlp), x, u_bound = 10, l_bound = 1)
+beta <- rbind(SAFE_icd$beta_all, SAFE_nlp$beta_all, SAFE_both$beta_all)
+SAFE_select <- which(colMeans(beta, na.rm = T) >= 0.5)
+SAFE_feature <- colnames(x)[SAFE_select]
+SAFE_feature
+```
+
+We select features that occur 50% among the three different surrogate-selected feature sets.
+This is the idea of *majority voting*. 
+
+Other percentile:
+
+```{r}
+# Tail method.
+SAFE_select_0 <- which(colMeans(beta, na.rm = T) >= 0)
+SAFE_feature_0 <- colnames(x)[SAFE_select_0]
+SAFE_feature_0
+```
+
+```{r}
+SAFE_select_0.3 <- which(colMeans(beta, na.rm = T) >= 0.3)
+SAFE_feature_0.3 <- colnames(x)[SAFE_select_0.3]
+SAFE_feature_0.3
+```
+
+```{r}
+SAFE_select_0.8 <- which(colMeans(beta, na.rm = T) >= 0.8)
+SAFE_feature_0.8 <- colnames(x)[SAFE_select_0.8]
+SAFE_feature_0.8
+```
+
+Exercise: Try different thresholds for creating silver-standard labels. 
+
+
+## 3. Cluster method. 
+
+### Motivation:
+
+- Focus on non-binary and/or multiple surrogates. 
+
+### Method:
+
+- Estimate $\pi_S = P(Y=1|S_{ICD}, S_{NLP})$ using Gaussian mixture models
+- Fit adaptive LASSO $\hat{\pi}_S \sim \mathbf{X}$.
+
+```{r}
+model_clust <- clustering_method(cbind(sicd, snlp), x)
+Cluster_select <- model_clust$beta_select
+Cluster_feature <- colnames(x)[Cluster_select]
+Cluster_feature
+```
+
+Other options?
+
+[Note: to include the parameters for clustering method]
+
+
+## Comapre different feature selection methods  
+
+Common selected features:
+
+```{r}
+feature <- c()
+feature <- rbind(feature, 1:ncol(x) %in% AFEP_select)
+feature <- rbind(feature, 1:ncol(x) %in% SAFE_select)
+feature <- rbind(feature, 1:ncol(x) %in% Cluster_select)
+
+rownames(feature) <- c("Rank correlation", 
+                       "Tail method", 
+                       "Cluster method")
+
+UpSetR::upset(data.frame(t(feature*1)), order.by = "freq") 
+```
+
+
+#TODO: add different feature density v.s. main_NLP, main_ICD density. 
+
+#Relation between health utilization and these features. to motivate incorporating the health utilization. 
+
