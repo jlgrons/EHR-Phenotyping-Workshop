@@ -48,10 +48,12 @@ install.packages("PheNorm")
 install.packages("MAP")
 
 install.packages("tidyverse")
+install.packages("corrplot")
 
 install.packages("glmnet")
 install.packages("randomForestSRC")
 install.packages("pROC")
+install.packages("mclust")
 ```
 
 

@@ -66,6 +66,13 @@ ehr_data %>% head()
 
 - Features: “CODx” (n = 10), “NLPx” (n = 574) refers to the counts of a specific code or NLP term, extracted by SQL or NLP
 
+## Missingness
+
+```{r}
+colnames(ehr_data)[which( colMeans(is.na(ehr_data)) > 0 )]
+```
+
+Only label is missing. 
 
 ## What is the prevalence of labels?
 
