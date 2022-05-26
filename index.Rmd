@@ -28,17 +28,10 @@ This website contains materials for Biostatistics Workshop in [2022 SSC Annual M
 
 In this workshop, we will introduce statistical learning methods designed to expedite the phenotyping process in order to improve the scalability of EHR research. 
 
-- **Module 1** Exploratory Data Analysis (EDA) and Feature Selection ([Slides](https://jlgrons.github.io/EHR-Phenotyping-Workshop/module1/1_EDA.html))
+- **Module 1** Exploratory Data Analysis (EDA) and Feature Selection ([Exerciese 1](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/ex1.Rmd))
 
-<aside>
-[Exerciese 1](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/Exercises/ex1.R)
-</aside>
+- **Module 2** Model Fitting and Evaluation  ([Exerciese 2](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module2/ex2.Rmd))
 
-- **Module 2** Model Fitting and Evaluation  ([Slides](https://jlgrons.github.io/EHR-Phenotyping-Workshop/module2/2_Model.html))
-
-<aside>
-[Exerciese 2](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/Exercises/ex2.R)
-</aside>
 
 ### PheCAP
 
