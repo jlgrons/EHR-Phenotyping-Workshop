@@ -339,7 +339,7 @@ validate_model <- function(train_y, test_y, train_y_hat, test_y_hat) {
   train_auc_ci <- paste0("(", train_auc_ci[1], ",", train_auc_ci[3], ")")
   
   test_auc <- auc(test_roc)
-  test_auc_ci <- ci(test_auc, method = "bootstrap", boot.n = 500, boot.stratified = F)
+  test_auc_ci <- ci(test_auc, method = "bootstrap", boot.n = 1000, boot.stratified = F)
   test_auc_ci <- round(test_auc_ci, 3)
   test_auc <- test_auc_ci[2]
   test_auc_ci_len <- as.numeric(test_auc_ci[3] - test_auc_ci[1])
@@ -438,5 +438,3 @@ Sinv.FUN <- function(uu,Yi,Di,yes.smooth=F)
 VTM <-function(vc, dm) {
   matrix(vc, ncol=length(vc), nrow=dm, byrow=T)
 }
-
-
