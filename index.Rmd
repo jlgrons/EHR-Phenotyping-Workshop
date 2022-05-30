@@ -44,15 +44,23 @@ Here is a list of packages that will be used during the workshop.
 
 Please copy and paste the following code into R Console to check and load the packages. 
 
-We are using R version (4.1.2).
+We are using R version ($\geq$ 3.6.0).
 
 ```{r, eval=FALSE, echo=TRUE}
 # Specify the packages from CRAN.
 packages <- c(
-	  "PheCAP",     "PheNorm",  "MAP", 
-	  "glmnet",     "glmpath",  "mclust",
-	  "tidyverse",  "ggplot2",  "corrplot",
-	  "data.table", "mltools",  "pROC",
+	  "PheCAP",     
+	  "PheNorm",   
+	  "MAP",        
+	  "glmnet",     
+	  "glmpath",  
+	  "mclust",     
+	  "tidyverse",  
+	  "ggplot2",  
+	  "corrplot",
+	  "data.table", 
+	  "mltools",  
+	  "pROC",
 	  "randomForestSRC"
 )
 
