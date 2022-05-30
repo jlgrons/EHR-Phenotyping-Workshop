@@ -108,46 +108,53 @@ get_silver_label <- function(s, u_bound, l_bound, q) {
   return(s_silver)
 }
 
-clustering_method <- function(s, x, n_subset = 2000, p_subset = 1, reps = 200, resample = F) {
+clustering_method <- function(s, x, mclust_model = NULL) {
   
-  pi_s <- guassian_clustering(s)$pi_s
+  s <- as.matrix(s)
+  N <- nrow(s)
+  tmpind <- 1:N
   
-  if (resample) {
-    beta <- c()
-    for (i in c(1:reps)) {
-      ind <- sample(1:nrow(x), n_subset)
-      
-      beta_tmp <- fit_alasso_bic(pi_s[ind], x[ind, ], family = "gaussian")$beta_hat 
-      beta_tmp <- beta_tmp[-1] #drop intercept
-      beta_tmp <- as.integer(beta_tmp != 0)
-      beta <- rbind(beta, beta_tmp)
-      
-      beta_select <- which(colMeans(beta, na.rm = T) >= 0.5)
-    }
-  } else {
-    # beta <- fit_alasso_approx(pi_s, x, family = "gaussian")
-    beta <- fit_alasso_bic(pi_s, x, family = "gaussian")$beta_hat 
-    beta <- beta[-1]
-    beta_select <- which(beta != 0)
+  # get pi_S via clustering or just use S if univariate/non-binary
+  if (ncol(s) > 1) {
+    mclustfit <- Mclust(s, G = 2, modelNames = mclust_model) 
+    pi_s <- ProbD.S(s, par = mclustfit$par)
+    beta <- fit_alasso_approx(pi_s, x, family = "gaussian")
+  }else {
+    pi_s <- s[, 1]
+    beta <- fit_alasso_bic(pi_s, x, family = "gaussian")$beta_hat
   }
   
-  return(list(beta_select = beta_select, beta = beta))
+  beta <- beta[-1]
+  beta_select <- which(beta != 0)
+ 
+  return(list(beta_select = beta_select, beta = beta, cluster_model = mclustfit))
 }
 
-guassian_clustering <- function(s) {
-  m <- Mclust(s, G = 2, verbose = F)
-  
-  # Group with the larger mean is the case group
-  case_label <- as.double(which.max(colSums(m$parameters$mean)))
-  
-  # Save the predicted probability of surrogates as pi_s
-  pi_s <- m$z[, case_label]
-  
-  s_group <- m$classification
-  s_group[s_group != case_label] <- 0
-  s_group[s_group == case_label] <- 1
-  
-  return(list(pi_s = pi_s, s_group = s_group))
+# Computes probabilities after clustering
+ProbD.S = function(Si, par) 
+{
+  par.list = list(pro = par$pro, mu = matrix(par$mean, ncol = 2), 
+                  var = list(1, 1))
+  Si = as.matrix(Si)
+  k1 = which.max(apply(par.list$mu, 2, mean))
+  k0 = setdiff(1:2, k1)
+  if (ncol(Si) == 1) {
+    sig2 = par$variance$sigmasq
+    if (length(sig2) == 1) {
+      sig2 = rep(sig2, 2)
+    }
+    par.list$var = as.list(sig2)
+  }
+  else {
+    for (kk in 1:2) {
+      par.list$var[[kk]] = par$variance$sigma[, , kk]
+    }
+  }
+  tmp1 = dmvnorm(Si, mean = par.list$mu[, k1], sigma = as.matrix(par.list$var[[k1]])) * 
+    par$pro[k1]
+  tmp0 = dmvnorm(Si, mean = par.list$mu[, k0], sigma = as.matrix(par.list$var[[k0]])) * 
+    par$pro[k0]
+  tmp1/(tmp1 + tmp0)
 }
 
 #################################################################

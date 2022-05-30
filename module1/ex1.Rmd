@@ -137,6 +137,29 @@ feature_cor <- cor(features[4:13])
 corrplot::corrplot(feature_cor)
 ```
 
+# Healthcare utilization
+
+```{r}
+feature_index <- sample(c(3:ncol(ehr_data)), 3, replace = FALSE)
+
+ehr_data %>%
+  dplyr::select(label, healthcare_utilization, feature_index) %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  dplyr::select(-label) %>%
+  pivot_longer(c(everything(), -disease, -healthcare_utilization), 
+               names_to = "feature", values_to = "count") %>%
+  ggplot(aes(x = healthcare_utilization, y = log(count + 1), color = disease, shape = feature, linetype = feature)) +
+  geom_point() +
+  geom_smooth(method='lm', se = FALSE, size=1)
+```
+
+More healthcare utilization, more featuer counts; but not necessary the patient get the disease.  
+
+Therefore, we need to adjust for the healthcare utilization when model fitting. 
+
+-----
+
 After some initial plotting, we get a sense of the basic structure of data for phenotyping:
 
 Label (Y): 
@@ -378,8 +401,16 @@ Cluster_feature
 
 Other options?
 
-[Note: to include the parameters for clustering method]
+Different models to fit the clustering. Try `?Mclust()`.
 
+Assume the multivariate mixture follows diagonal, equal volume and shape. "EEI".
+
+```{r}
+model_clust_EEI <- clustering_method(s = cbind(sicd, snlp), x = x, mclust_model = "EEI")
+Cluster_select_EEI <- model_clust_EEI$beta_select
+Cluster_feature_EEI <- colnames(x)[Cluster_select_EEI]
+Cluster_feature_EEI
+```
 
 ## Comapre different feature selection methods  
 
@@ -398,8 +429,10 @@ rownames(feature) <- c("Rank correlation",
 UpSetR::upset(data.frame(t(feature*1)), order.by = "freq") 
 ```
 
+Save the data and feature selected for module 2 and model fitting. 
 
-#TODO: add different feature density v.s. main_NLP, main_ICD density. 
+```{r}
+save(list = ls(), file = "../module2/ex1Environment.RData")
+```
 
-#Relation between health utilization and these features. to motivate incorporating the health utilization. 
 
