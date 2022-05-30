@@ -36,13 +36,15 @@ In this workshop, we will introduce statistical learning methods designed to exp
 
 ### PheCAP
 
-We will use the real EHR data examples from [PheCAP](https://celehs.github.io/PheCAP/), an R package that implements high-throughput phenotyping with electronic health record (EHR) using a common automated pipeline.. 
+We will use the real EHR data examples from [PheCAP](https://celehs.github.io/PheCAP/), an R package that implements high-throughput phenotyping with electronic health record (EHR) using a common automated pipeline. 
 
 ### Required packages
 
 Here is a list of packages that will be used during the workshop. 
 
 Please copy and paste the following code into R Console to check and load the packages. 
+
+We are using R version (4.1.2).
 
 ```{r, eval=FALSE, echo=TRUE}
 # Specify the packages from CRAN.
@@ -84,6 +86,3 @@ package.check <- lapply(
 # Acknowledgments {.appendix}
 
 This website was made with the [distill package](https://rstudio.github.io/distill/), drawn mostly from Silvia Canelón’s [Sharing Your Work with xaringan](https://spcanelon.github.io/xaringan-basics-and-beyond/). 
-
-
-

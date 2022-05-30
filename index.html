@@ -2465,23 +2465,33 @@ Slides
 <li><p><strong>Module 2</strong> Model Fitting and Evaluation (<a href="https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module2/ex2.Rmd">Exerciese 2</a>)</p></li>
 </ul>
 <h3 id="phecap">PheCAP</h3>
-<p>We will use the real EHR data examples from <a href="https://celehs.github.io/PheCAP/">PheCAP</a>, an R package that implements high-throughput phenotyping with electronic health record (EHR) using a common automated pipeline..</p>
+<p>We will use the real EHR data examples from <a href="https://celehs.github.io/PheCAP/">PheCAP</a>, an R package that implements high-throughput phenotyping with electronic health record (EHR) using a common automated pipeline.</p>
 <h3 id="required-packages">Required packages</h3>
 <p>Here is a list of packages that will be used during the workshop.</p>
+<p>Please copy and paste the following code into R Console to check and load the packages.</p>
+<p>We are using R version (4.1.2).</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='co'># From CRAN</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='st'>"PheCAP"</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='st'>"PheNorm"</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='st'>"MAP"</span><span class='op'>)</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='co'># Specify the packages from CRAN.</span>
+<span class='va'>packages</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
+    <span class='st'>"PheCAP"</span>,     <span class='st'>"PheNorm"</span>,  <span class='st'>"MAP"</span>, 
+    <span class='st'>"glmnet"</span>,     <span class='st'>"glmpath"</span>,  <span class='st'>"mclust"</span>,
+    <span class='st'>"tidyverse"</span>,  <span class='st'>"ggplot2"</span>,  <span class='st'>"corrplot"</span>,
+    <span class='st'>"data.table"</span>, <span class='st'>"mltools"</span>,  <span class='st'>"pROC"</span>,
+    <span class='st'>"randomForestSRC"</span>
+<span class='op'>)</span>
 
-<span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='st'>"tidyverse"</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='st'>"corrplot"</span><span class='op'>)</span>
-
-<span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='st'>"glmnet"</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='st'>"randomForestSRC"</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='st'>"pROC"</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='st'>"mclust"</span><span class='op'>)</span>
+<span class='co'># Load the packages.</span>
+<span class='co'># Missing package(s) will be first installed and loaded.  </span>
+<span class='va'>package.check</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/lapply.html'>lapply</a></span><span class='op'>(</span>
+  <span class='va'>packages</span>,
+  FUN <span class='op'>=</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='op'>{</span>
+    <span class='kw'>if</span> <span class='op'>(</span><span class='op'>!</span><span class='kw'><a href='https://rdrr.io/r/base/library.html'>require</a></span><span class='op'>(</span><span class='va'>x</span>, character.only <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
+      <span class='fu'><a href='https://rdrr.io/r/utils/install.packages.html'>install.packages</a></span><span class='op'>(</span><span class='va'>x</span>, dependencies <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+      <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'>x</span>, character.only <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+    <span class='op'>}</span>
+  <span class='op'>}</span>
+<span class='op'>)</span>
 </code></pre>
 </div>
 </div>
