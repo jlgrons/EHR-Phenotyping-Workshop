@@ -25,12 +25,25 @@ The most likely explanation is that this is a random sample of patients (for pub
 or 
 (ii) ≥1 NLP mention for any CAD related concepts: CAD, CAD procedures, CAD biomarkers, positive stress test. 
 
+```{r}
+packages <- c(
+	  "tidyverse", "PheCAP", "glmnet", "glmpath",
+	  "corrplot", "mclust", "corrplot", "ggplot2"
+)
+```
 
 ```{r}
-library(PheCAP)
-library(tidyverse)
-library(corrplot)
+package.check <- lapply(
+	  packages,
+	  FUN = function(x) {
+	    if (!require(x, character.only = TRUE)) {
+	      install.packages(x, dependencies = TRUE)
+	      library(x, character.only = TRUE)
+	    }
+	  }
+	)
 ```
+
 
 ```{r}
 # Load helper functions.
@@ -140,7 +153,7 @@ corrplot::corrplot(feature_cor)
 # Healthcare utilization
 
 ```{r}
-feature_index <- sample(c(3:ncol(ehr_data)), 3, replace = FALSE)
+feature_index <- sample(c(3:ncol(ehr_data)), 2, replace = FALSE)
 
 ehr_data %>%
   dplyr::select(label, healthcare_utilization, feature_index) %>%

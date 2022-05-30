@@ -42,19 +42,29 @@ We will use the real EHR data examples from [PheCAP](https://celehs.github.io/Ph
 
 Here is a list of packages that will be used during the workshop. 
 
+Please copy and paste the following code into R Console to check and load the packages. 
+
 ```{r, eval=FALSE, echo=TRUE}
-# From CRAN
-install.packages("PheCAP")
-install.packages("PheNorm")
-install.packages("MAP")
+# Specify the packages from CRAN.
+packages <- c(
+	  "PheCAP",     "PheNorm",  "MAP", 
+	  "glmnet",     "glmpath",  "mclust",
+	  "tidyverse",  "ggplot2",  "corrplot",
+	  "data.table", "mltools",  "pROC",
+	  "randomForestSRC"
+)
 
-install.packages("tidyverse")
-install.packages("corrplot")
-
-install.packages("glmnet")
-install.packages("randomForestSRC")
-install.packages("pROC")
-install.packages("mclust")
+# Load the packages.
+# Missing package(s) will be first installed and loaded.  
+package.check <- lapply(
+  packages,
+  FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+      install.packages(x, dependencies = TRUE)
+      library(x, character.only = TRUE)
+    }
+  }
+)
 ```
 
 
