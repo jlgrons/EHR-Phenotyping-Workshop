@@ -8,6 +8,7 @@ author:
   affiliation: University of Toronto
   affiliation_url: https://www.statistics.utoronto.ca/
 - name: Siyue Yang
+- name: Jianhui Gao
 date: June 5th, 2022
 site: distill::distill_website
 ---
