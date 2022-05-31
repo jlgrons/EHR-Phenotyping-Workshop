@@ -27,7 +27,7 @@ package.check <- lapply(
 ```
 
 ```{r}
-# load environment from example 1
+# Load environment.
 load("environment.RData")
 ```
 
@@ -44,6 +44,7 @@ source("../Rscripts/ex2_helper_function.R")
 Can leverage some clinical-meaningful features that are related to Y.
 
 e.g. Feature "main_ICD" = the total number of the disease-related billing codes. 
+
 ```{r}
 ehr_data %>%
   filter(!is.na(label)) %>%
@@ -83,11 +84,13 @@ ehr_data %>%
 ```{r, warning=FALSE}
 nonmissing_index <- which(!is.na(ehr_data$label))
 y <- ehr_data$label[nonmissing_index]
-surrogate_icd <- ehr_data$main_ICD[nonmissing_index]
-surrogate_nlp <- ehr_data$main_NLP[nonmissing_index]
+sicd <- ehr_data$main_ICD
+snlp <- ehr_data$main_NLP 
+sicdnlp <- ehr_data$main_ICD + ehr_data$main_NLP 
 
-get_auc(y, surrogate_icd)
-get_auc(y, surrogate_nlp)
+get_auc(y, sicd[nonmissing_index])
+get_auc(y, snlp[nonmissing_index])
+get_auc(y, sicdnlp[nonmissing_index])
 ```
 
 We call these highly predictive features of the true disease status "surrogates".
@@ -102,7 +105,7 @@ We call these highly predictive features of the true disease status "surrogates"
 
 Opportunity 2 and 3 will be covered in the next module! 
 
-# Feature selection method - Tail method (Yu et al. 2017)
+# Feature selection method
 
 Motivation (Extreme assumption): 
 
@@ -113,11 +116,22 @@ Motivation (Extreme assumption):
 ehr_data %>%
   filter(!is.na(label)) %>%
   mutate(disease = factor(label)) %>%
-  ggplot(aes(x = main_NLP)) +
+  ggplot(aes(x = main_ICD)) +
   geom_density(aes(color = disease)) +
   theme_bw() + 
-  annotate("rect", fill = "grey", alpha = 0.7, xmin = 1, xmax = 10, ymin = -Inf, ymax = Inf) +
-  xlim(c(0,15))
+  annotate("rect", fill = "grey", alpha = 0.7, xmin = 1, xmax = 4, 
+           ymin = -Inf, ymax = Inf) +
+  xlim(c(0,10))
+
+ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = main_ICD + main_NLP)) +
+  geom_density(aes(color = disease)) +
+  theme_bw() + 
+  annotate("rect", fill = "grey", alpha = 0.7, xmin = 1, xmax = 6, 
+           ymin = -Inf, ymax = Inf) +
+  xlim(c(0,10))
 ```
 
 - Left white rect: patients not having the disease.
@@ -130,42 +144,47 @@ ehr_data %>%
 Surrogates are available for all the patients!
 
 ```{r}
-surrogates <- list(
-  PhecapSurrogate(
-    variable_names = "main_ICD",
-    lower_cutoff = 1, upper_cutoff = 10),
-  PhecapSurrogate(
-    variable_names = "main_NLP",
-    lower_cutoff = 1, upper_cutoff = 10),
-  PhecapSurrogate(
-    variable_names = c("main_ICD", "main_NLP"),
-    lower_cutoff = 1, upper_cutoff = 10))
+# Prepare 3 surrogates.
+sicd <- ehr_data$main_ICD
+snlp <- ehr_data$main_NLP 
+sicdnlp <- ehr_data$main_ICD + ehr_data$main_NLP 
+
+# Prepare features to be selected. 
+x <- data.matrix(ehr_data %>% select(starts_with("COD") | starts_with("NLP")))
+```
+
+Run surrogate-assisted feature extraction (SAFE) and show result.
+
+```{r}
+# Truncated using 3 and 1. 
+SAFE_icd <- extreme_method(sicd, x, u_bound = 4, l_bound = 1)
+SAFE_nlp <- extreme_method(snlp, x, u_bound = 4, l_bound = 1)
+SAFE_both <- extreme_method(sicd+snlp, x, u_bound = 6, l_bound = 1)
+
+# Majority voting. 
+beta <- rbind(SAFE_icd$beta_all, SAFE_nlp$beta_all, SAFE_both$beta_all)
+SAFE_select <- which(colMeans(beta, na.rm = T) >= 0.5)
+SAFE_feature <- colnames(x)[SAFE_select]
+SAFE_feature
 ```
 
 We select features that occur 50% among the three different surrogate-selected feature sets.
 This is the idea of *majority voting*. 
 
-Run surrogate-assisted feature extraction (SAFE) and show result.
-
-```{r}
-system.time(feature_selected <- phecap_run_feature_extraction(data, surrogates))
-```
-
-```{r}
-feature_selected
-```
-
 Train phenotyping model and show the AUC on the testing set. 
 
 ```{r}
+selected_features <- c("main_ICD", "main_NLP", "healthcare_utilization", SAFE_feature)
+
 modelssl_lr <- fit_alasso_bic(
   y = train_y,
-  x = train_x[, c("healthcare_utilization", feature_selected[[1]])] 
+  x = train_x[, selected_features] 
 )
 
+newx <- cbind(1, test_x[, selected_features])
+
 # Prediction on testing set.
-y_hat <- expit(cbind(1, test_x[, c("healthcare_utilization", feature_selected[[1]])])
-%*% modelssl_lr$beta_hat) # Inverse Logit
+y_hat <- expit(newx %*% modelssl_lr$beta_hat) # Inverse Logit
 
 plot(roc(test_y, y_hat),
   print.auc = TRUE,

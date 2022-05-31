@@ -97,10 +97,6 @@ get_silver_label <- function(s, u_bound, l_bound, q) {
     l_bound <- quantile(s, q)
   }
   
-  # Transformation. 
-  l_bound <- log(l_bound + 1)
-  u_bound <- log(u_bound + 1)
-  
   s_silver <- rep(0.5, length(s))
   s_silver[s <= l_bound] <- 0
   s_silver[s >= u_bound] <- 1
