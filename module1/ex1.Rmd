@@ -16,7 +16,7 @@ In this module, we will go through a public released dataset from an R package P
 # Load the packages. 
 packages <- c("tidyverse", "PheCAP", "corrplot", "ggplot2")
 
-# Check if the pacakages are missing or not. 
+# Check if the packages are missing or not. 
 # If missing, install automatically.
 # If not missing, load the package.
 package.check <- lapply(
@@ -164,10 +164,6 @@ ehr_data %>%
   geom_smooth(method='lm', se = FALSE, size=1)
 ```
 
-More healthcare utilization, more featuer counts; but not necessary the patient get the disease.  
+More healthcare utilization, more feature counts; but not necessary the patient get the disease.  
 
 Therefore, we need to adjust for the healthcare utilization when model fitting. 
-
-
-
-
