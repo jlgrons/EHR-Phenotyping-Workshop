@@ -50,11 +50,11 @@ We are using R version ($\geq$ 3.6.0).
 # Specify the packages from CRAN.
 packages <- c(
 	  "PheCAP",     
-	  "PheNorm",   
-	  "MAP",        
+	  "PheNorm",  
+	  "MAP", 
 	  "glmnet",     
 	  "glmpath",  
-	  "mclust",     
+	  "mclust",
 	  "tidyverse",  
 	  "ggplot2",  
 	  "corrplot",
