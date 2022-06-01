@@ -766,6 +766,41 @@ twostep_pred <- function(train_data, test_data, X, S, health_count, beta.step1) 
   y_hat.ss <- plogis(mu)
 }
 
+validate_phecap <- function(dat, selected_features, nsim, n.train = c(50, 70, 90)) {
+  
+  temp <- parallel::mclapply(1:nsim, FUN = function(n) {
+    set.seed(1234+n)
+    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.y <- lapply(id.x, function(i) {
+      sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
+    })
+    
+    phecap <- sapply(1:3, function(i) {
+      auc_roc(
+        actuals = ehr_data[id.y[[i]], ]$label,
+        preds = linear_model_predict(
+          beta =
+            adaptive_lasso_fit(
+              x = ehr_data[id.x[[i]], selected_features],
+              y = ehr_data[id.x[[i]], ]$label,
+              family = "binomial",
+              tuning = "cv"
+            ),
+          x = as.matrix(ehr_data[id.y[[i]], selected_features]),
+          probability = TRUE
+        )
+      )
+    })
+    phecap
+  })
+
+  temp <- do.call(rbind.data.frame, temp)
+  
+  colnames(temp) <- outer(paste0("n=", c(50, 70, 90)), 
+                          c("PheCAP"), paste, sep = ",")
+  return(temp)
+}
+
 validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234+n)
