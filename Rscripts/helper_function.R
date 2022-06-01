@@ -650,11 +650,11 @@ linear_model_predict <- function(beta, x, probability = FALSE)
 }
 
 validate <- function(dat, nsim, n.train = c(50, 70, 90)){
-  temp <- mclapply(1:n.sim, FUN = function(n) {
+  temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(Sys.time())
     id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) 
-      sample(labeled_data$patient_id[which(!(labeled_data$patient_id %in% i))]))
+      sample(dat$patient_id[which(!(dat$patient_id %in% i))]))
     
     lasso <- sapply(1:3, function(i){
       auc_roc(
