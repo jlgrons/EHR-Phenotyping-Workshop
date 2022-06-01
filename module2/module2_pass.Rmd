@@ -1,0 +1,140 @@
+---
+title: "Module 2: Supervised Learning"
+author: "Jianhui Gao, Siyue Yang, and Jessica Gronsbell"
+date: "31/05/2022"
+output:
+  pdf_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+# Load helper functions.
+source("../Rscripts/helper_function.R")
+```
+
+```{r}
+# If a package is installed, it will be loaded. If any
+## are not, the missing package(s) will be installed
+## from CRAN and then loaded.
+
+## First specify the packages of interest
+packages <- c(
+  "dplyr", "PheCAP", "glmnet", "randomForestSRC", "PheNorm",
+  "MAP", "pROC", "mltools", "data.table", "ggplot2", "parallel"
+)
+
+## Now load or install&load all
+package.check <- lapply(
+  packages,
+  FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+      install.packages(x, dependencies = TRUE)
+      library(x, character.only = TRUE)
+    }
+  }
+)
+
+# load environment from example 1
+load("../data/CAD_norm_pub.rda")
+```
+
+# Prepare data for algorithm development
+
+-   Split data into training and testing set
+-   Training 106, Testing 75
+
+```{r}
+ehr_data <- cbind(1:nrow(x), y, x)
+colnames(ehr_data) <- c("patient_id", "label", colnames(x))
+data <- PhecapData(ehr_data, "healthcare_utilization", "label", 75,
+  patient_id = "patient_id", seed = 1234
+)
+
+# Transform Features log(x + 1)
+labeled_data <- ehr_data %>% dplyr::filter(!is.na(label))
+
+
+# All Features
+all_x <- ehr_data %>% dplyr::select(
+  starts_with("COD"), starts_with("NLP"),
+  surrogate, healthcare_utilization
+)
+health_count <- ehr_data$healthcare_utilization
+
+# Training Set
+train_data <- ehr_data %>% dplyr::filter(patient_id %in% data$training_set)
+train_x <- train_data %>%
+  dplyr::select(
+    starts_with("COD"), starts_with("NLP"),
+    surrogate, healthcare_utilization
+  ) %>%
+  as.matrix()
+train_y <- train_data %>%
+  dplyr::select(label) %>%
+  pull()
+
+# Testing Set
+test_data <- ehr_data %>% dplyr::filter(patient_id %in% data$validation_set)
+test_x <- test_data %>%
+  dplyr::select(
+    starts_with("COD"), starts_with("NLP"),
+    surrogate, healthcare_utilization
+  ) %>%
+  as.matrix()
+test_y <- test_data %>%
+  dplyr::select(label) %>%
+  pull()
+```
+
+# Penalized logistic regression
+
+-   Fit LASSO and Adaptive LASSO(ALASSO)
+
+```{r}
+# Choose best lambda using CV
+beta.lasso <- lasso_fit(x = train_x, y = train_y, 
+                        tuning = "cv", family = "binomial")
+```
+```{r}
+# Features Selected
+names(beta.lasso[abs(beta.lasso)>0])[-1]
+```
+```{r}
+# prediction on testing set
+y_hat.lasso <- linear_model_predict(beta = beta.lasso, x = test_x, 
+                                    probability = TRUE)
+```
+
+```{r}
+# Fit Adaptive LASSO
+beta.alasso <- adaptive_lasso_fit(x = train_x, y = train_y, 
+                                   tuning = "cv", family = "binomial")
+y_hat.alasso <- linear_model_predict(beta = beta.alasso, x = test_x, 
+                                    probability = TRUE)
+
+
+# Features Selected
+names(beta.alasso[abs(beta.alasso)>0])[-1]
+```
+```{r}
+roc.lasso <- roc(test_y, y_hat.lasso)
+roc.alasso <- roc(test_y, y_hat.alasso)
+
+plot(roc.lasso,
+  print.auc = TRUE, main = "n_training = 90 (50%)"
+)
+plot(roc.alasso,
+  print.auc = TRUE, col = 'red', add = TRUE, print.auc.y = 0.4
+)
+legend(0, 0.2, legend = c("LASSO", "ALASSO"), col = c("black","red"), 
+       lty = 1, cex = 0.8)
+```
+
+```{r}
+roc_full.lasso <- get_roc(y_true = test_y, y_score = y_hat.lasso)
+head(roc_full.lasso,10)
+```
+
+```{r}
+roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso)
+head(roc_full.lasso,10)
+```
