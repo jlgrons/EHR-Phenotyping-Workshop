@@ -681,7 +681,7 @@ linear_model_predict <- function(beta, x, probability = FALSE) {
   y
 }
 
-validate <- function(dat, nsim, n.train = c(50, 70, 90)) {
+validate_supervised <- function(dat, nsim, n.train = c(50, 70, 90)) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(Sys.time())
     id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
@@ -721,25 +721,26 @@ validate <- function(dat, nsim, n.train = c(50, 70, 90)) {
         )
       )
     })
-    ss <- sapply(1:3, function(i) {
-      auc_roc(
-        actuals = ehr_data[id.y[[i]], ]$label,
-        preds = twostep_pred(
-          train_data = ehr_data[id.x[[i]], ],
-          test_data = ehr_data[id.y[[i]], ],
-          X = ehr_data[, 6:ncol(ehr_data)],
-          S = sicdnlp,
-          health_count = health_count,
-          beta.step1 = beta.step1
-        )
-      )
-    })
+    # ss <- sapply(1:3, function(i) {
+    #   auc_roc(
+    #     actuals = ehr_data[id.y[[i]], ]$label,
+    #     preds = twostep_pred(
+    #       train_data = ehr_data[id.x[[i]], ],
+    #       test_data = ehr_data[id.y[[i]], ],
+    #       X = ehr_data[, 6:ncol(ehr_data)],
+    #       S = sicdnlp,
+    #       health_count = health_count,
+    #       beta.step1 = beta.step1
+    #     )
+    #   )
+    # })
 
-    c(lasso, alasso, ss)
+    #c(lasso, alasso, ss)
+    c(lasso, alasso)
   })
   temp <- do.call(rbind.data.frame, temp)
   colnames(temp) <- outer(paste0("n=", c(50, 70, 90)), 
-                          c("LASSO", "ALASSO", "Twostep"), paste, sep = ",")
+                          c("LASSO", "ALASSO"), paste, sep = ",")
   return(temp)
 }
 
