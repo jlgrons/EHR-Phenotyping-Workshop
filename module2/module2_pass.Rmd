@@ -49,7 +49,7 @@ data <- PhecapData(ehr_data, "healthcare_utilization", "label", 75,
   patient_id = "patient_id", seed = 123
 )
 
-# Transform Features log(x + 1)
+# Data with non missing label
 labeled_data <- ehr_data %>% dplyr::filter(!is.na(label))
 
 
