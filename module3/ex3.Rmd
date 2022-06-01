@@ -1,7 +1,9 @@
 ---
 title: "Module 3: Semi-supervised learning (PheCAP)"
 author: "Siyue Yang, Jianhui Gao, and Jesse Gronsbell"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -269,4 +271,8 @@ Save the data and feature selected for module 4 and model fitting.
 
 ```{r, eval = F}
 save(list = ls(), file = "../module4/environment.RData")
+```
+
+```{r, echo = F, eval = F}
+rmarkdown::render("ex3.Rmd")
 ```
