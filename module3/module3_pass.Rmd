@@ -173,6 +173,6 @@ head(roc_full.phecap,10)
 
 Save the data and feature selected for module 4 and model fitting. 
 
-```{r}
+```{r, eval = F}
 save(list = ls(), file = "../module4/environment_pass.RData")
 ```
