@@ -29,9 +29,13 @@ This website contains materials for Biostatistics Workshop in [2022 SSC Annual M
 
 In this workshop, we will introduce statistical learning methods designed to expedite the phenotyping process in order to improve the scalability of EHR research. 
 
-- **Module 1** Exploratory Data Analysis (EDA) and Feature Selection ([Exerciese 1](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/ex1.Rmd))
+- **Module 1** Exploratory data analysis (EDA) ([Exerciese 1](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_phecap.pdf))
 
-- **Module 2** Model Fitting and Evaluation  ([Exerciese 2](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module2/ex2.Rmd))
+- **Module 2** Supervised learning model fitting and evaluation  ([Exerciese 2](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module2/module2_phecap.pdf))
+
+- **Module 3** Semi-supervised learning model fitting and evaluation  ([Exerciese 3](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module3/module3_phecap.pdf)) 
+
+- **Module 4** Semi-supervised and weakly-supervised learning model fitting and evaluation  ([Exerciese 4](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module4/module4_phecap.pdf))
 
 
 ### PheCAP
@@ -61,7 +65,9 @@ packages <- c(
 	  "data.table", 
 	  "mltools",  
 	  "pROC",
-	  "randomForestSRC"
+	  "parallel",
+	  "randomForestSRC",
+	  "e1071"
 )
 
 # Load the packages.
@@ -77,18 +83,26 @@ package.check <- lapply(
 )
 ```
 
+### Implementation
+
+To start with, please `git clone` the repository to local. 
+
+```{r, eval=FALSE, echo=TRUE}
+git clone git@github.com:jlgrons/EHR-Phenotyping-Workshop.git
+```
+
 
 # Resources
 
 - Publicly available EHR dataset
 
-  - Physionet 
-  - n2n2 competitions
+  - [PhysioNet](https://physionet.org/)
+  - [National NLP Clinical Challenges (n2c2)](https://n2c2.dbmi.hms.harvard.edu/) NLP competitions
   
 - NLP software
-  - cTAKES
-  - clinspacy
-  - medspacy
+  - [cTAKES](https://ctakes.apache.org/)
+  - [clinspacy](https://github.com/ML4LHS/clinspacy)
+  - [medspacy](https://github.com/medspacy/medspacy)
   
 
 # Acknowledgments {.appendix}

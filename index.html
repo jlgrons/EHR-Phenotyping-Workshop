@@ -2461,8 +2461,10 @@ Slides
 <p>This website contains materials for Biostatistics Workshop in <a href="https://ssc.ca/en/meetings/annual/2022-annual-meeting">2022 SSC Annual Meeting Online</a>.</p>
 <p>In this workshop, we will introduce statistical learning methods designed to expedite the phenotyping process in order to improve the scalability of EHR research.</p>
 <ul>
-<li><p><strong>Module 1</strong> Exploratory Data Analysis (EDA) and Feature Selection (<a href="https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/ex1.Rmd">Exerciese 1</a>)</p></li>
-<li><p><strong>Module 2</strong> Model Fitting and Evaluation (<a href="https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module2/ex2.Rmd">Exerciese 2</a>)</p></li>
+<li><p><strong>Module 1</strong> Exploratory data analysis (EDA) (<a href="https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_phecap.pdf">Exerciese 1</a>)</p></li>
+<li><p><strong>Module 2</strong> Supervised learning model fitting and evaluation (<a href="https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module2/module2_phecap.pdf">Exerciese 2</a>)</p></li>
+<li><p><strong>Module 3</strong> Semi-supervised learning model fitting and evaluation (<a href="https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module3/module3_phecap.pdf">Exerciese 3</a>)</p></li>
+<li><p><strong>Module 4</strong> Semi-supervised and weakly-supervised learning model fitting and evaluation (<a href="https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module4/module4_phecap.pdf">Exerciese 4</a>)</p></li>
 </ul>
 <h3 id="phecap">PheCAP</h3>
 <p>We will use the real EHR data examples from <a href="https://celehs.github.io/PheCAP/">PheCAP</a>, an R package that implements high-throughput phenotyping with electronic health record (EHR) using a common automated pipeline.</p>
@@ -2475,18 +2477,20 @@ Slides
 <pre class="sourceCode r"><code class="sourceCode r"><span class='co'># Specify the packages from CRAN.</span>
 <span class='va'>packages</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
     <span class='st'>"PheCAP"</span>,     
-    <span class='st'>"PheNorm"</span>,   
-    <span class='st'>"MAP"</span>,        
+    <span class='st'>"PheNorm"</span>,  
+    <span class='st'>"MAP"</span>, 
     <span class='st'>"glmnet"</span>,     
     <span class='st'>"glmpath"</span>,  
-    <span class='st'>"mclust"</span>,     
+    <span class='st'>"mclust"</span>,
     <span class='st'>"tidyverse"</span>,  
     <span class='st'>"ggplot2"</span>,  
     <span class='st'>"corrplot"</span>,
     <span class='st'>"data.table"</span>, 
     <span class='st'>"mltools"</span>,  
     <span class='st'>"pROC"</span>,
-    <span class='st'>"randomForestSRC"</span>
+    <span class='st'>"parallel"</span>,
+    <span class='st'>"randomForestSRC"</span>,
+    <span class='st'>"e1071"</span>
 <span class='op'>)</span>
 
 <span class='co'># Load the packages.</span>
@@ -2503,23 +2507,28 @@ Slides
 </code></pre>
 </div>
 </div>
+<h3 id="implementation">Implementation</h3>
+<p>To start with, please <code>git clone</code> the repository to local.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>git clone git<span class="sc">@</span>github.com<span class="sc">:</span>jlgrons<span class="sc">/</span>EHR<span class="sc">-</span>Phenotyping<span class="sc">-</span>Workshop.git</span></code></pre></div>
+</div>
 <h1 id="resources">Resources</h1>
 <ul>
 <li><p>Publicly available EHR dataset</p>
 <ul>
-<li>Physionet</li>
-<li>n2n2 competitions</li>
+<li><a href="https://physionet.org/">PhysioNet</a></li>
+<li><a href="https://n2c2.dbmi.hms.harvard.edu/">National NLP Clinical Challenges (n2c2)</a> NLP competitions</li>
 </ul></li>
 <li><p>NLP software</p>
 <ul>
-<li>cTAKES</li>
-<li>clinspacy</li>
-<li>medspacy</li>
+<li><a href="https://ctakes.apache.org/">cTAKES</a></li>
+<li><a href="https://github.com/ML4LHS/clinspacy">clinspacy</a></li>
+<li><a href="https://github.com/medspacy/medspacy">medspacy</a></li>
 </ul></li>
 </ul>
 <h1 class="appendix" id="acknowledgments">Acknowledgments</h1>
 <p>This website was made with the <a href="https://rstudio.github.io/distill/">distill package</a>, drawn mostly from Silvia Canelón’s <a href="https://spcanelon.github.io/xaringan-basics-and-beyond/">Sharing Your Work with xaringan</a>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>
