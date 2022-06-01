@@ -683,10 +683,10 @@ linear_model_predict <- function(beta, x, probability = FALSE) {
 
 validate_supervised <- function(dat, nsim, n.train = c(50, 70, 90)) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
-    set.seed(12345+n)
+    set.seed(1234+n)
     id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
-      sample(dat$patient_id[which(!(dat$patient_id %in% i))])
+      sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
 
     lasso <- sapply(1:3, function(i) {
@@ -768,10 +768,10 @@ twostep_pred <- function(train_data, test_data, X, S, health_count, beta.step1) 
 
 validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
-    set.seed(12345+n)
+    set.seed(1234+n)
     id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
-      sample(dat$patient_id[which(!(dat$patient_id %in% i))])
+      sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
     ss <- sapply(1:3, function(i) {
       auc_roc(
