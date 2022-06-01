@@ -1,6 +1,6 @@
 ---
 title: "Module 3: Semi-supervised learning (PheCAP)"
-author: "Siyue Yang, Jianhui Gao, and Jesse Gronsbell"
+author: "Siyue Yang, Jianhui Gao, and Jessica Gronsbell"
 output: pdf_document
 ---
 
@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 # Load the packages. 
 packages <- c("tidyverse", "PheCAP", "glmnet", "glmpath", "pROC")
 
-# Check if the pacakages are missing or not. 
+# Check if the packages are missing or not. 
 # If missing, install automatically.
 # If not missing, load the package.
 package.check <- lapply(
