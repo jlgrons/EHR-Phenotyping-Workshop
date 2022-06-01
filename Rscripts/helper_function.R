@@ -888,3 +888,40 @@ predict_rf <- function(beta, x, ...)
     stop("Package randomForestSRC not found")
   }
 }
+
+validate_svmandrf <- function(dat, nsim, n.train = c(50, 70, 90)) {
+  temp <- parallel::mclapply(1:nsim, FUN = function(n) {
+    set.seed(1234 + n)
+    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.y <- lapply(id.x, function(i) {
+      sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
+    })
+    
+    rf <- sapply(1:3, function(i) {
+      model <- rfsrc(y ~., data = 
+                       data.frame(y = ehr_data[id.x[[i]], ]$label, 
+                                  x = ehr_data[id.x[[i]], 3:ncol(ehr_data)]))
+      auc_roc(
+        actuals = ehr_data[id.y[[i]], ]$label,
+        preds = predict(model,
+                        data.frame(x = ehr_data[id.y[[i]], 3:ncol(ehr_data)]))$predicted)
+
+    })
+    
+    svm <- sapply(1:3, function(i) {
+      model <- fit_svm(y = ehr_data[id.x[[i]], ]$label, 
+                       x = ehr_data[id.x[[i]], 3:ncol(ehr_data)])
+      auc_roc(
+        actuals = ehr_data[id.y[[i]], ]$label,
+        preds = predict(model,
+                        ehr_data[id.y[[i]], 3:ncol(ehr_data)]))})
+
+    c(rf, svm)
+  })
+  temp <- do.call(rbind.data.frame, temp)
+  colnames(temp) <- outer(paste0("n=", c(50, 70, 90)),
+                          c("rf", "svm"), paste,
+                          sep = ","
+  )
+  return(temp)
+}
