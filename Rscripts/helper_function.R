@@ -70,7 +70,9 @@ extreme_method <- function(s, x, n_subset = 400, p_subset = 1, reps = 200,
   beta <- c()
   for (i in c(1:reps)) {
     ind <- c(sample(ind1, n_subset), sample(ind0, n_subset))
-    beta_tmp <- fit_alasso_bic(s_label[ind], x[ind, ], family = "binomial", x_standardize = F)$beta_hat
+    beta_tmp <- fit_alasso_bic(s_label[ind], x[ind, ],
+      family = "binomial", x_standardize = F
+    )$beta_hat
     beta_tmp <- beta_tmp[-1] # drop intercept
     beta_tmp <- as.integer(beta_tmp != 0)
     beta <- rbind(beta, beta_tmp)
@@ -145,9 +147,15 @@ ProbD.S <- function(Si, par) {
       par.list$var[[kk]] <- par$variance$sigma[, , kk]
     }
   }
-  tmp1 <- dmvnorm(Si, mean = par.list$mu[, k1], sigma = as.matrix(par.list$var[[k1]])) *
+  tmp1 <- dmvnorm(Si,
+    mean = par.list$mu[, k1],
+    sigma = as.matrix(par.list$var[[k1]])
+  ) *
     par$pro[k1]
-  tmp0 <- dmvnorm(Si, mean = par.list$mu[, k0], sigma = as.matrix(par.list$var[[k0]])) *
+  tmp0 <- dmvnorm(Si,
+    mean = par.list$mu[, k0],
+    sigma = as.matrix(par.list$var[[k0]])
+  ) *
     par$pro[k0]
   tmp1 / (tmp1 + tmp0)
 }
@@ -157,8 +165,10 @@ ProbD.S <- function(Si, par) {
 #################################################################
 
 # Function to calculate adaptive LASSO
-fit_alasso_bic <- function(y, x, family = "binomial", x_standardize = F, offset = NULL, weights = NULL,
-                           init_lambda = NULL, init_opt = "ridge", bic_opt = "modified", bic_factor = 0.1) {
+fit_alasso_bic <- function(y, x, family = "binomial", x_standardize = F,
+                           offset = NULL, weights = NULL,
+                           init_lambda = NULL, init_opt = "ridge",
+                           bic_opt = "modified", bic_factor = 0.1) {
   if (is.null(offset)) {
     offset <- rep(0, length(y))
   }
@@ -833,20 +843,20 @@ validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
   return(temp)
 }
 
-fit_svm <- function(
-  x, y, subject_weight, ...)
-{
+fit_svm <- function(x, y, subject_weight, ...) {
   if (!(
     missing(subject_weight) || is.null(subject_weight) ||
-    sd(subject_weight) < 1e-8)) {
+      sd(subject_weight) < 1e-8)) {
     warning("'subject_weight' not supported in SVM")
   }
   if (requireNamespace("e1071", quietly = TRUE)) {
     y1 <- factor(y, c(0, 1))
     tuning <- e1071::tune.svm(
-      x, y1, gamma = c(0.2, 1, 5) / ncol(x), cost = 4.0 ** (-5L : 5L),
+      x, y1,
+      gamma = c(0.2, 1, 5) / ncol(x), cost = 4.0**(-5L:5L),
       kernel = "radial", type = "C-classification",
-      probability = TRUE)
+      probability = TRUE
+    )
     return(tuning$best.model)
   } else {
     stop("Package e1071 not found")
@@ -854,36 +864,37 @@ fit_svm <- function(
 }
 
 
-predict_svm <- function(beta, x, ...)
-{
+predict_svm <- function(beta, x, ...) {
   if (requireNamespace("e1071", quietly = TRUE)) {
     return(attr(predict(
-      beta, x, probability = TRUE), "probabilities")[, "1"])
+      beta, x,
+      probability = TRUE
+    ), "probabilities")[, "1"])
   } else {
     stop("Package e1071 not found")
   }
 }
 
 
-fit_rf <- function(
-  x, y, subject_weight, ...)
-{
+fit_rf <- function(x, y, subject_weight, ...) {
   if (requireNamespace("randomForestSRC", quietly = TRUE)) {
     y <- factor(y, c(0, 1))
     return(randomForestSRC::rfsrc(
-      y ~ ., data = data.frame(y = y, x = x),
-      case.wt = subject_weight))
+      y ~ .,
+      data = data.frame(y = y, x = x),
+      case.wt = subject_weight
+    ))
   } else {
     stop("Package randomForestSRC not found")
   }
 }
 
 
-predict_rf <- function(beta, x, ...)
-{
+predict_rf <- function(beta, x, ...) {
   if (requireNamespace("randomForestSRC", quietly = TRUE)) {
     return(as.numeric(
-      predict(beta, data.frame(x = x))$predicted[, "1"]))
+      predict(beta, data.frame(x = x))$predicted[, "1"]
+    ))
   } else {
     stop("Package randomForestSRC not found")
   }
@@ -896,32 +907,44 @@ validate_svmandrf <- function(dat, nsim, n.train = c(50, 70, 90)) {
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
-    
-    rf <- sapply(1:3, function(i) {
-      model <- rfsrc(y ~., data = 
-                       data.frame(y = ehr_data[id.x[[i]], ]$label, 
-                                  x = ehr_data[id.x[[i]], 3:ncol(ehr_data)]))
-      auc_roc(
-        actuals = ehr_data[id.y[[i]], ]$label,
-        preds = predict(model,
-                        data.frame(x = ehr_data[id.y[[i]], 3:ncol(ehr_data)]))$predicted)
 
-    })
-    
-    svm <- sapply(1:3, function(i) {
-      model <- fit_svm(y = ehr_data[id.x[[i]], ]$label, 
-                       x = ehr_data[id.x[[i]], 3:ncol(ehr_data)])
+    rf <- sapply(1:3, function(i) {
+      model <- rfsrc(y ~ .,
+        data =
+          data.frame(
+            y = ehr_data[id.x[[i]], ]$label,
+            x = ehr_data[id.x[[i]], 3:ncol(ehr_data)]
+          )
+      )
       auc_roc(
         actuals = ehr_data[id.y[[i]], ]$label,
-        preds = predict(model,
-                        ehr_data[id.y[[i]], 3:ncol(ehr_data)]))})
+        preds = predict(
+          model,
+          data.frame(x = ehr_data[id.y[[i]], 3:ncol(ehr_data)])
+        )$predicted
+      )
+    })
+
+    svm <- sapply(1:3, function(i) {
+      model <- fit_svm(
+        y = ehr_data[id.x[[i]], ]$label,
+        x = ehr_data[id.x[[i]], 3:ncol(ehr_data)]
+      )
+      auc_roc(
+        actuals = ehr_data[id.y[[i]], ]$label,
+        preds = predict(
+          model,
+          ehr_data[id.y[[i]], 3:ncol(ehr_data)]
+        )
+      )
+    })
 
     c(rf, svm)
   })
   temp <- do.call(rbind.data.frame, temp)
   colnames(temp) <- outer(paste0("n=", c(50, 70, 90)),
-                          c("rf", "svm"), paste,
-                          sep = ","
+    c("rf", "svm"), paste,
+    sep = ","
   )
   return(temp)
 }

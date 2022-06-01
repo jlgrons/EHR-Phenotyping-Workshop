@@ -138,7 +138,7 @@ head(roc_full.lasso,10)
 ```
 
 # Different train size
-- randomly sample traning size = 50, 70, 90
+- randomly sample training size = 50, 70, 90
 - rest as testing set
 - repeat 600 times
 
@@ -151,7 +151,7 @@ end - start
 
 # median AUC
 apply(auc_supervised, 2, median)
-# se
+# SE
 apply(auc_supervised, 2, sd)
 ```
 
@@ -225,5 +225,8 @@ legend(0, 0.4, legend = c("LASSO", "ALASSO","Random Forest", "SVM"),
 
 
 ## Validation
+```{r, eval=FALSE}
+auc_rfandsvm <- validate_svmandrf(dat = labeled_data, nsim = 10)
+```
 
 
