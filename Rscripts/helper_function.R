@@ -766,65 +766,30 @@ twostep_pred <- function(train_data, test_data, X, S, health_count, beta.step1) 
   y_hat.ss <- plogis(mu)
 }
 
-validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), bhatx) {
+validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
-    set.seed(Sys.time())
+    set.seed(12345+n)
     id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))])
     })
-    
-    lasso <- sapply(1:3, function(i) {
+    ss <- sapply(1:3, function(i) {
       auc_roc(
         actuals = ehr_data[id.y[[i]], ]$label,
-        preds = linear_model_predict(
-          beta =
-            lasso_fit(
-              x = ehr_data[id.x[[i]], 3:ncol(ehr_data)],
-              y = ehr_data[id.x[[i]], ]$label,
-              family = "binomial",
-              tuning = "cv"
-            ),
-          x = as.matrix(ehr_data[id.y[[i]], 3:ncol(ehr_data)]),
-          probability = TRUE
+        preds = twostep_pred(
+          train_data = ehr_data[id.x[[i]], ],
+          test_data = ehr_data[id.y[[i]], ],
+          X = x,
+          S = S,
+          health_count = health_count,
+          beta.step1 = beta
         )
       )
     })
-    alasso <- sapply(1:3, function(i) {
-      auc_roc(
-        actuals = ehr_data[id.y[[i]], ]$label,
-        preds = linear_model_predict(
-          beta =
-            adaptive_lasso_fit(
-              x = ehr_data[id.x[[i]], 3:ncol(ehr_data)],
-              y = ehr_data[id.x[[i]], ]$label,
-              family = "binomial",
-              tuning = "cv"
-            ),
-          x = as.matrix(ehr_data[id.y[[i]], 3:ncol(ehr_data)]),
-          probability = TRUE
-        )
-      )
-    })
-    # ss <- sapply(1:3, function(i) {
-    #   auc_roc(
-    #     actuals = ehr_data[id.y[[i]], ]$label,
-    #     preds = twostep_pred(
-    #       train_data = ehr_data[id.x[[i]], ],
-    #       test_data = ehr_data[id.y[[i]], ],
-    #       X = ehr_data[, 6:ncol(ehr_data)],
-    #       S = sicdnlp,
-    #       health_count = health_count,
-    #       beta.step1 = beta.step1
-    #     )
-    #   )
-    # })
-    
-    #c(lasso, alasso, ss)
-    c(lasso, alasso)
+    ss
   })
   temp <- do.call(rbind.data.frame, temp)
   colnames(temp) <- outer(paste0("n=", c(50, 70, 90)), 
-                          c("LASSO", "ALASSO"), paste, sep = ",")
+                          c("Two-Step"), paste, sep = ",")
   return(temp)
 }
