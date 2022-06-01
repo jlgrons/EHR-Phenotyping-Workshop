@@ -4,7 +4,6 @@ author: "Jianhui Gao, Siyue Yang, and Jessica Gronsbell"
 date: "01/06/2022"
 output: pdf_document
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
@@ -32,7 +31,7 @@ package.check <- lapply(
 )
 
 # load environment from example 1
-load("../module4/environment.RData")
+load("../module4/environment_pass.RData")
 source("../Rscripts/helper_function.R")
 ```
 
@@ -42,7 +41,7 @@ source("../Rscripts/helper_function.R")
 
 ```{r}
 x <- all_x %>% select(starts_with("COD") | starts_with("NLP")) # COD + NLP
-S <- ehr_data$main_ICDNLP
+S <- ehr_data$surrogate
 
 # Step 1
 beta.step1 <- adaptive_lasso_fit(
@@ -104,55 +103,13 @@ ss.roc.full <- get_roc(test_y, y_hat.ss)
 head(ss.roc.full, 10)
 ```
 
-# Model Evaluation
-```{r, cache=TRUE}
-start <- Sys.time()
-auc_twostep <- validate_ss(
-  dat = labeled_data, nsim = 600,
-  n.train = c(50, 70, 90),
-  beta = beta.step1,
-  S = S,
-  x = x
-)
-end <- Sys.time()
-end - start
-# median AUC
-apply(auc_twostep, 2, median)
-# se
-apply(auc_twostep, 2, sd)
-```
-```{r}
-boxplot(auc_twostep,
-  ylim = c(0.5, 1), names = c("n=50", "n=70", "n=90"),
-  main = "Two-Step Semi-Supervised"
-)
-```
-```{r}
-# Compare with Previous method
-boxplot(cbind(auc_supervised, auc_phecap, auc_twostep)
-%>% select(starts_with("n=50")),
-ylim = c(0.5, 1), names = c("LASSO", "ALASSO","PheCAP", "Two-Step")
-, main = "n=50"
-)
-boxplot(cbind(auc_supervised, auc_phecap, auc_twostep)
-%>% select(starts_with("n=70")),
-ylim = c(0.5, 1), names = c("LASSO", "ALASSO","PheCAP", "Two-Step"), 
-main = "n=70"
-)
-boxplot(cbind(auc_supervised, auc_phecap, auc_twostep)
-%>% select(starts_with("n=90")),
-ylim = c(0.5, 1), names = c("LASSO", "ALASSO","PheCAP","Two-Step"), 
-main = "n=90"
-)
-```
-
 # Weakly supervised learning
 ```{r, cache=TRUE}
 model_phenorm <- PheNorm.Prob(
-  nm.logS.ori = "main_ICDNLP", # name of surrogates
+  nm.logS.ori = "surrogate", # name of surrogates
   nm.utl = "healthcare_utilization", # name of HU
-  nm.X = colnames(ehr_data)[-1:-6], # Other predictors X
-  dat = ehr_data %>% select(-patient_id, -main_ICD, -main_NLP),
+  nm.X = colnames(ehr_data)[-1:-4], # Other predictors X
+  dat = ehr_data,
   train.size = nrow(ehr_data)
 )
 ```
@@ -176,49 +133,10 @@ plot(roc(test_y, y_hat.phenorm),
 )
 
 legend(0, 0.4,
-  legend = c("LASSO", "ALASSO", "PheCAP","Two-Step", "PheNorm"),
+  legend = c("LASSO", "ALASSO", "PheCAP", "Two-Step", "PheNorm"),
   col = c("black", "red", "blue", "green", "orange"),
   lty = 1, cex = 0.8
 )
 ```
 
-```{r}
-# Use untransformed data; MAP requires sparse matrix
-# Create sparse matrix for surroagtes
-data_fit <- sparsify(PheCAP::ehr_data %>%
-  select(main_ICD, main_NLP) %>%
-  rename(ICD = main_ICD) %>% data.table())
-
-# Create sparse matrix for HU
-note <- Matrix(PheCAP::ehr_data$healthcare_utilization, ncol = 1, sparse = TRUE)
-model_map <- MAP(mat = data_fit, note = note, full.output = TRUE)
-
-y_hat.map <- model_map$scores[data$validation_set]
-```
-
-```{r}
-plot(roc(test_y, y_hat.lasso),
-  print.auc = TRUE, main = "n_training = 106 (60%)"
-)
-plot(roc(test_y, y_hat.alasso),
-  print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
-)
-plot(roc(test_y, y_hat.phecap),
-  print.auc = TRUE, col = "blue", add = TRUE, print.auc.y = 0.3
-)
-plot(roc(test_y, y_hat.ss),
-  print.auc = TRUE, col = "green", add = TRUE, print.auc.y = 0.2
-)
-plot(roc(test_y, y_hat.phenorm),
-  print.auc = TRUE, col = "orange", add = TRUE, print.auc.y = 0.1
-)
-plot(roc(test_y, y_hat.map),
-  print.auc = TRUE, col = "orchid", add = TRUE, print.auc.y = 0
-)
-
-legend(0, 0.4,
-  legend = c("LASSO", "ALASSO", "PheCAP","Two-Step",  "PheNorm", "MAP"),
-  col = c("black", "red", "blue", "green", "orange", "orchid"),
-  lty = 1, cex = 0.8
-)
-```
+Can not run MAP, MAP uses poisson regression. Requires integer count data.

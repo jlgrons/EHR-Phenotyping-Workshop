@@ -1,6 +1,6 @@
 ---
 title: "Module 2: Supervised Learning"
-author: "Jianhui Gao, Siyue Yang, and Jesse Gronsbell"
+author: "Jianhui Gao, Siyue Yang, and Jessica Gronsbell"
 date: "31/05/2022"
 output:
   pdf_document: default
@@ -47,7 +47,7 @@ data <- PhecapData(PheCAP::ehr_data, "healthcare_utilization", "label", 75,
   patient_id = "patient_id", seed = 123
 )
 
-# Transform Features log(x + 1)
+# Data with non-missing labels
 labeled_data <- ehr_data %>% dplyr::filter(!is.na(label))
 
 
@@ -157,11 +157,11 @@ apply(auc_supervised, 2, sd)
 
 ```{r}
 par(mfrow =c(1,3))
-boxplot(auc_supervised[,c(1,4)], ylim = c(0.5, 1), 
+boxplot(auc_supervised %>% select(starts_with("n=50")) , ylim = c(0.5, 1), 
         names = c("LASSO", "ALASSO"), main = "n=50")
-boxplot(auc_supervised[,c(1,4)], ylim = c(0.5, 1), 
+boxplot(auc_supervised %>% select(starts_with("n=70")) , ylim = c(0.5, 1), 
         names = c("LASSO", "ALASSO"), main = "n=70")
-boxplot(auc_supervised[,c(1,4)], ylim = c(0.5, 1), 
+boxplot(auc_supervised %>% select(starts_with("n=90")) , ylim = c(0.5, 1), 
         names = c("LASSO", "ALASSO"), main = "n=90")
 ```
 ```{r}
