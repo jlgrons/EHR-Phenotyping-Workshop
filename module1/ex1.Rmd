@@ -101,39 +101,12 @@ ehr_data[, feature_index] %>%
   geom_density(aes(x = count, color = feature)) 
 ```
 
-Too skewed?  Use log transformation. 
-
-```{r}
-feature_index <- sample(c(3:ncol(ehr_data)), 20, replace = FALSE)
-
-ehr_data[, feature_index] %>%
-  pivot_longer(everything(), names_to = "feature", values_to = "count") %>%
-  ggplot() +
-  geom_density(aes(x = log(count + 1), color = feature)) 
-```
-
-Features are distributed very close to 0.
-
-- Why using `log(count + 1)`?
-
-## How many features are 0?
-
-```{r}
-features <- ehr_data[, c(3:ncol(ehr_data))]
-feature_0_rate <- colMeans(features == 0)
-
-head(feature_0_rate, 10)
-```
-
-```{r}
-plot(density(feature_0_rate))
-```
-
-Most of the features have count 0 for most of the patients. 
+Too skewed.
 
 ## What are correlations between features?
 
 ```{r}
+features <- ehr_data[, c(3:ncol(ehr_data))]
 feature_cor <- cor(features[feature_index])
 corrplot::corrplot(feature_cor)
 ```
@@ -167,3 +140,41 @@ ehr_data %>%
 More healthcare utilization, more feature counts; but not necessary the patient get the disease.  
 
 Therefore, we need to adjust for the healthcare utilization when model fitting. 
+
+One option is to orthogonalize the healthcare utilization and other features. 
+
+# Prepare the data for model fitting.
+
+To do this, we first need to transform all the features as they are count variables. 
+
+Then orthogonalize other features X against healthcare utilization H, by performing a linear regression of X against H and taking the residual from the fitting to obtain the new X.
+
+```{r}
+features <- log(features + 1)
+```
+
+```{r}
+# Features other than healthcare utilization.
+other_features <- features[, -3]
+
+# Orthogonalize. 
+orthognalized_features <- qr.resid(qr(cbind(1, features$healthcare_utilization)), 
+                                  as.matrix(other_features))
+```
+
+```{r}
+orthognalized_features <- data.frame(orthognalized_features)
+
+ehr_data <- cbind(healthcare_utilization = features$healthcare_utilization, 
+                  orthognalized_features, 
+                  label = ehr_data$label, 
+                  patient_id = ehr_data$patient_id) %>%
+            dplyr::select(patient_id, label, main_ICD, main_NLP, healthcare_utilization, everything())
+```
+
+Save the data for module 2 and model fitting. 
+
+```{r}
+save(list = ls(), file = "../module2/environment.RData")
+```
+
