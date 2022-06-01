@@ -469,8 +469,7 @@ VTM <- function(vc, dm) {
   matrix(vc, ncol = length(vc), nrow = dm, byrow = T)
 }
 
-balanced_cv_fold <- function(kfolds,
-                             n = NULL, y = NULL, seed = NULL) {
+balanced_cv_fold <- function(kfolds, n = NULL, y = NULL, seed = NULL) {
   stopifnot(!is.null(n) || !is.null(y))
   stopifnot(kfolds >= 2)
 
@@ -683,7 +682,7 @@ linear_model_predict <- function(beta, x, probability = FALSE) {
 
 validate_supervised <- function(dat, nsim, n.train = c(50, 70, 90)) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
-    set.seed(1234+n)
+    set.seed(1234 + n)
     id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
@@ -735,12 +734,14 @@ validate_supervised <- function(dat, nsim, n.train = c(50, 70, 90)) {
     #   )
     # })
 
-    #c(lasso, alasso, ss)
+    # c(lasso, alasso, ss)
     c(lasso, alasso)
   })
   temp <- do.call(rbind.data.frame, temp)
-  colnames(temp) <- outer(paste0("n=", c(50, 70, 90)), 
-                          c("LASSO", "ALASSO"), paste, sep = ",")
+  colnames(temp) <- outer(paste0("n=", c(50, 70, 90)),
+    c("LASSO", "ALASSO"), paste,
+    sep = ","
+  )
   return(temp)
 }
 
@@ -767,14 +768,13 @@ twostep_pred <- function(train_data, test_data, X, S, health_count, beta.step1) 
 }
 
 validate_phecap <- function(dat, selected_features, nsim, n.train = c(50, 70, 90)) {
-  
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
-    set.seed(1234+n)
+    set.seed(1234 + n)
     id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
-    
+
     phecap <- sapply(1:3, function(i) {
       auc_roc(
         actuals = ehr_data[id.y[[i]], ]$label,
@@ -795,15 +795,17 @@ validate_phecap <- function(dat, selected_features, nsim, n.train = c(50, 70, 90
   })
 
   temp <- do.call(rbind.data.frame, temp)
-  
-  colnames(temp) <- outer(paste0("n=", c(50, 70, 90)), 
-                          c("PheCAP"), paste, sep = ",")
+
+  colnames(temp) <- outer(paste0("n=", c(50, 70, 90)),
+    c("PheCAP"), paste,
+    sep = ","
+  )
   return(temp)
 }
 
 validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
-    set.seed(1234+n)
+    set.seed(1234 + n)
     id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
@@ -824,7 +826,9 @@ validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
     ss
   })
   temp <- do.call(rbind.data.frame, temp)
-  colnames(temp) <- outer(paste0("n=", c(50, 70, 90)), 
-                          c("Two-Step"), paste, sep = ",")
+  colnames(temp) <- outer(paste0("n=", c(50, 70, 90)),
+    c("Two-Step"), paste,
+    sep = ","
+  )
   return(temp)
 }
