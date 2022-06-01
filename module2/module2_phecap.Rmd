@@ -155,9 +155,12 @@ end - start
 
 ```{r}
 par(mfrow =c(1,3))
-boxplot(auc_supervised[,c(1,4)], ylim = c(0.5, 1), names = c("LASSO", "ALASSO"), main = "n=50")
-boxplot(auc_supervised[,c(1,4)], ylim = c(0.5, 1), names = c("LASSO", "ALASSO"), main = "n=70")
-boxplot(auc_supervised[,c(1,4)], ylim = c(0.5, 1), names = c("LASSO", "ALASSO"), main = "n=90")
+boxplot(auc_supervised[,c(1,4)], ylim = c(0.5, 1), 
+        names = c("LASSO", "ALASSO"), main = "n=50")
+boxplot(auc_supervised[,c(1,4)], ylim = c(0.5, 1), 
+        names = c("LASSO", "ALASSO"), main = "n=70")
+boxplot(auc_supervised[,c(1,4)], ylim = c(0.5, 1), 
+        names = c("LASSO", "ALASSO"), main = "n=90")
 ```
 ```{r}
 boxplot(auc_supervised[,1:3], ylim = c(0.5, 1), 
