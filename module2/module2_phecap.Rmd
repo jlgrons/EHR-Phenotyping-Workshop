@@ -139,12 +139,12 @@ legend(0, 0.2,
 
 ```{r}
 roc_full.lasso <- get_roc(y_true = test_y, y_score = y_hat.lasso)
-head(roc_full.lasso, 10)
+roc_full.lasso %>% data.frame() %>% filter(FPR <= 0.1)
 ```
 
 ```{r}
 roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso)
-head(roc_full.lasso, 10)
+roc_full.alasso %>% data.frame() %>% filter(FPR <= 0.1)
 ```
 
 # Different train size
