@@ -67,7 +67,7 @@ packages <- c(
 	  "pROC",
 	  "parallel",
 	  "randomForestSRC",
-	  "e1071"
+	  "SVMMaj"
 )
 
 # Load the packages.
