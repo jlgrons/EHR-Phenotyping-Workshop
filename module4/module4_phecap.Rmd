@@ -99,9 +99,15 @@ legend(0, 0.3,
 )
 ```
 
+- roc paramter at FPR = 5% and 10% cut-off
+
 ```{r}
-ss.roc.full <- get_roc(test_y, y_hat.ss)
-head(ss.roc.full, 10)
+ss.roc.full <- get_roc(test_y, y_hat.ss) %>% data.frame()
+get_roc_parameter(0.05, ss.roc.full)
+```
+
+```{r}
+get_roc_parameter(0.1, ss.roc.full)
 ```
 
 # Model Evaluation
