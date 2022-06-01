@@ -137,14 +137,24 @@ legend(0, 0.2,
 )
 ```
 
+- ROC parameter at FPR = 5% and 10% cut-off 
+
 ```{r}
-roc_full.lasso <- get_roc(y_true = test_y, y_score = y_hat.lasso)
-roc_full.lasso %>% data.frame() %>% filter(FPR <= 0.1)
+roc_full.lasso <- get_roc(y_true = test_y, y_score = y_hat.lasso) %>% data.frame()
+get_roc_parameter(0.05, roc_full.lasso)
+```
+```{r}
+roc_full.lasso <- get_roc(y_true = test_y, y_score = y_hat.lasso) %>% data.frame()
+get_roc_parameter(0.1, roc_full.lasso)
 ```
 
 ```{r}
-roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso)
-roc_full.alasso %>% data.frame() %>% filter(FPR <= 0.1)
+roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso) %>% data.frame()
+get_roc_parameter(0.05, roc_full.alasso)
+```
+```{r}
+roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso) %>% data.frame()
+get_roc_parameter(0.1, roc_full.alasso)
 ```
 
 # Different train size
