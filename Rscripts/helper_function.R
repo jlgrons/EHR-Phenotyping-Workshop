@@ -432,6 +432,7 @@ get_roc <- function(y_true, y_score, subject_weight = NULL) {
   colnames(df) <- c("cutoff", "pos.rate", "FPR", "TPR", "PPV", "NPV", "F1")
   return(df)
 }
+
 get_auc <- function(y_true, y_score, subject_weight = NULL) {
   ROC.Est.FUN(y_true, y_score, yy0 = 0.5, fpr0 = seq(0, 1, 0.01), wgti = subject_weight, yes.smooth = F)[1]
 }
@@ -947,4 +948,9 @@ validate_svmandrf <- function(dat, nsim, n.train = c(50, 70, 90)) {
     sep = ","
   )
   return(temp)
+}
+
+get_roc_parameter <- function(fpr, roc_curve){
+  fpr0 <- roc_curve$FPR
+  roc_curve %>% filter(FPR == fpr0[which.max(fpr0[fpr0 <= fpr])])
 }
