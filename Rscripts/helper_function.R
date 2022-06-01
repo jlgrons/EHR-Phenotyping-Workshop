@@ -926,9 +926,9 @@ validate_svmandrf <- function(dat, nsim, n.train = c(50, 70, 90)) {
     })
 
     svm <- sapply(1:3, function(i) {
-      model <- fit_svm(
+      model <- SVMMaj::svmmaj(
         y = ehr_data[id.x[[i]], ]$label,
-        x = ehr_data[id.x[[i]], 3:ncol(ehr_data)]
+        X = ehr_data[id.x[[i]], 3:ncol(ehr_data)]
       )
       auc_roc(
         actuals = ehr_data[id.y[[i]], ]$label,
