@@ -138,3 +138,8 @@ head(roc_full.lasso,10)
 roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso)
 head(roc_full.lasso,10)
 ```
+
+```{r}
+save(list = ls(), file = "../module3/environment_pass.RData")
+```
+
