@@ -1,10 +1,9 @@
 ---
-title: "Supervised Learning"
-author: "Jianhui Gao"
+title: "Module 2: Supervised Learning"
+author: "Jianhui Gao, Siyue Yang, and Jesse Gronsbell"
 date: "31/05/2022"
 output:
   pdf_document: default
-  html_document: default
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
