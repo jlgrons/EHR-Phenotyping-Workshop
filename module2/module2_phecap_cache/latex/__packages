@@ -1,4 +1,10 @@
 base
+methods
+datasets
+utils
+grDevices
+graphics
+stats
 mclust
 Matrix
 glmnet
@@ -15,3 +21,4 @@ pROC
 mltools
 data.table
 ggplot2
+parallel
