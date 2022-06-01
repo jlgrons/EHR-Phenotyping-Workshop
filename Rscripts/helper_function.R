@@ -832,3 +832,59 @@ validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
   )
   return(temp)
 }
+
+fit_svm <- function(
+  x, y, subject_weight, ...)
+{
+  if (!(
+    missing(subject_weight) || is.null(subject_weight) ||
+    sd(subject_weight) < 1e-8)) {
+    warning("'subject_weight' not supported in SVM")
+  }
+  if (requireNamespace("e1071", quietly = TRUE)) {
+    y1 <- factor(y, c(0, 1))
+    tuning <- e1071::tune.svm(
+      x, y1, gamma = c(0.2, 1, 5) / ncol(x), cost = 4.0 ** (-5L : 5L),
+      kernel = "radial", type = "C-classification",
+      probability = TRUE)
+    return(tuning$best.model)
+  } else {
+    stop("Package e1071 not found")
+  }
+}
+
+
+predict_svm <- function(beta, x, ...)
+{
+  if (requireNamespace("e1071", quietly = TRUE)) {
+    return(attr(predict(
+      beta, x, probability = TRUE), "probabilities")[, "1"])
+  } else {
+    stop("Package e1071 not found")
+  }
+}
+
+
+fit_rf <- function(
+  x, y, subject_weight, ...)
+{
+  if (requireNamespace("randomForestSRC", quietly = TRUE)) {
+    y <- factor(y, c(0, 1))
+    return(randomForestSRC::rfsrc(
+      y ~ ., data = data.frame(y = y, x = x),
+      case.wt = subject_weight))
+  } else {
+    stop("Package randomForestSRC not found")
+  }
+}
+
+
+predict_rf <- function(beta, x, ...)
+{
+  if (requireNamespace("randomForestSRC", quietly = TRUE)) {
+    return(as.numeric(
+      predict(beta, data.frame(x = x))$predicted[, "1"]))
+  } else {
+    stop("Package randomForestSRC not found")
+  }
+}
