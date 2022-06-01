@@ -150,6 +150,7 @@ To do this, we first need to transform all the features as they are count variab
 Then orthogonalize other features X against healthcare utilization H, by performing a linear regression of X against H and taking the residual from the fitting to obtain the new X.
 
 ```{r}
+features$main_ICDNLP <- features$main_ICD + features$main_NLP
 features <- log(features + 1)
 ```
 
@@ -169,7 +170,8 @@ ehr_data <- cbind(healthcare_utilization = features$healthcare_utilization,
                   orthognalized_features, 
                   label = ehr_data$label, 
                   patient_id = ehr_data$patient_id) %>%
-            dplyr::select(patient_id, label, main_ICD, main_NLP, healthcare_utilization, everything())
+            dplyr::select(patient_id, label, main_ICD, main_NLP, main_ICDNLP, 
+                          healthcare_utilization, everything())
 ```
 
 Save the data for module 2 and model fitting. 
