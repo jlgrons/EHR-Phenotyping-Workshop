@@ -129,28 +129,31 @@ legend(0, 0.2, legend = c("LASSO", "ALASSO"), col = c("black","red"),
 ```
 
 ```{r}
-FPR = 0.05
-rbind(coords(roc = roc(test_y, y_hat.lasso), x = FPR, input = "fpr")[-1],
-coords(roc = roc(test_y, y_hat.alasso), x = FPR, input = "fpr")[-1])
+roc_full.lasso <- get_roc(y_true = test_y, y_score = y_hat.lasso)
+head(roc_full.lasso,10)
 ```
 
 ```{r}
-FPR = 0.1
-rbind(coords(roc = roc(test_y, y_hat.lasso), x = FPR, input = "fpr")[-1],
-coords(roc = roc(test_y, y_hat.alasso), x = FPR, input = "fpr")[-1])
+roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso)
+head(roc_full.lasso,10)
 ```
 
 # Different train size
 - randomly sample traning size = 50, 70, 90
 - rest as testing set
-- repeat 500 times
+- repeat 600 times
 
-```{r}
+```{r, cache=TRUE}
 start<- Sys.time()
-auc_supervised <- validate_supervised(dat = labeled_data, nsim = 500, 
+auc_supervised <- validate_supervised(dat = labeled_data, nsim = 600, 
                                       n.train = c(50, 70, 90))
 end <- Sys.time()
 end - start
+
+# median AUC
+apply(auc_supervised, 2, median)
+# se
+apply(auc_supervised, 2, sd)
 ```
 
 ```{r}
