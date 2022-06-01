@@ -172,3 +172,58 @@ boxplot(auc_supervised[,1:3], ylim = c(0.5, 1),
 boxplot(auc_supervised[,4:6], ylim = c(0.5, 1), 
         names = c("n=50", "n=70", "n=90"), main = "ALASSO")
 ```
+
+# Appendix
+
+## Random Forest
+```{r}
+model_rf <- rfsrc(y ~., data = data.frame(y =train_y, x = train_x))
+y_hat.rf <- predict(model_rf, newdata=data.frame(x = test_x))$predicted
+```
+
+```{r}
+roc.rf <- roc(test_y, y_hat.rf)
+
+plot(roc.lasso,
+  print.auc = TRUE, main = "n_training = 106 (40%)"
+)
+plot(roc.alasso,
+  print.auc = TRUE, col = 'red', add = TRUE, print.auc.y = 0.4
+)
+plot(roc.rf,
+  print.auc = TRUE, col = 'grey', add = TRUE, print.auc.y = 0.3
+)
+legend(0, 0.2, legend = c("LASSO", "ALASSO","Random Forest"), col = c("black","red", "grey"), 
+       lty = 1, cex = 0.8)
+```
+
+## SVM
+```{r}
+model_svm <- fit_svm(x = train_x, y = train_y)
+y_hat.svm <- predict_svm(model_svm, test_x)
+```
+
+```{r}
+roc.svm <- roc(test_y, y_hat.svm)
+
+plot(roc.lasso,
+  print.auc = TRUE, main = "n_training = 106 (40%)"
+)
+plot(roc.alasso,
+  print.auc = TRUE, col = 'red', add = TRUE, print.auc.y = 0.4
+)
+plot(roc.rf,
+  print.auc = TRUE, col = 'grey', add = TRUE, print.auc.y = 0.3
+)
+plot(roc.svm,
+  print.auc = TRUE, col = 'pink', add = TRUE, print.auc.y = 0.2
+)
+legend(0, 0.4, legend = c("LASSO", "ALASSO","Random Forest", "SVM"), 
+       col = c("black","red", "grey", "pink"), 
+       lty = 1, cex = 0.8)
+```
+
+
+## Validation
+
+
