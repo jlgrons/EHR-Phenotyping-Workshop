@@ -40,10 +40,10 @@ load("environment.RData")
 # Prepare data for algorithm development
 
 -   Split data into training and testing set
--   Training 50%, Testing 50%
+-   Training 106(60%), Testing 75(40%)
 
 ```{r}
-data <- PhecapData(PheCAP::ehr_data, "healthcare_utilization", "label", 0.5,
+data <- PhecapData(PheCAP::ehr_data, "healthcare_utilization", "label", 75,
   patient_id = "patient_id", seed = 123
 )
 
@@ -118,7 +118,7 @@ roc.lasso <- roc(test_y, y_hat.lasso)
 roc.alasso <- roc(test_y, y_hat.alasso)
 
 plot(roc.lasso,
-  print.auc = TRUE, main = "n_training = 90 (50%)"
+  print.auc = TRUE, main = "n_training = 106 (40%)"
 )
 plot(roc.alasso,
   print.auc = TRUE, col = 'red', add = TRUE, print.auc.y = 0.4
