@@ -32,7 +32,7 @@ package.check <- lapply(
 )
 
 # load environment from example 1
-load("../module2/environment.RData")
+load("../module4/environment.RData")
 source("../Rscripts/helper_function.R")
 ```
 
@@ -41,19 +41,19 @@ source("../Rscripts/helper_function.R")
 (i) Regress the surrogate on the features with penalized least square to get the direction of beta.
 
 ```{r}
-x <- all_x %>% select(starts_with("COD")|starts_with("NLP")) # COD + NLP
+x <- all_x %>% select(starts_with("COD") | starts_with("NLP")) # COD + NLP
 S <- ehr_data$main_ICDNLP
 
 # Step 1
 beta.step1 <- adaptive_lasso_fit(
-    y = S, # surrogate
-    x = x, # all X
-    family = "gaussian",
-    tuning = "cv"
-  )
+  y = S, # surrogate
+  x = x, # all X
+  family = "gaussian",
+  tuning = "cv"
+)
 
 # Features selected
-names(beta.step1[abs(beta.step1)>0])[-1]
+names(beta.step1[abs(beta.step1) > 0])[-1]
 ```
 
 (ii) Regress the outcome on the linear predictor to get the intercept and multiplier for the beta.
@@ -62,8 +62,8 @@ names(beta.step1[abs(beta.step1)>0])[-1]
 bhatx <- linear_model_predict(beta = beta.step1, x = as.matrix(x))
 
 # Step 2
-step2 <- glm(train_y ~ bhatx[train_data$patient_id] + S[train_data$patient_id]+
-               health_count[train_data$patient_id])
+step2 <- glm(train_y ~ bhatx[train_data$patient_id] + S[train_data$patient_id] +
+  health_count[train_data$patient_id])
 beta_step2 <- coef(step2)
 beta_step2
 ```
@@ -72,8 +72,8 @@ beta_step2
 beta <- beta_step2[2] * beta.step1
 # mu
 mu <- beta_step2[1] +
-    as.numeric(as.matrix(x[test_data$patient_id, ]) %*% beta[-1]) +
-    as.numeric(beta_step2[3] %*% S[test_data$patient_id]) + 
+  as.numeric(as.matrix(x[test_data$patient_id, ]) %*% beta[-1]) +
+  as.numeric(beta_step2[3] %*% S[test_data$patient_id]) +
   as.numeric(beta_step2[4] %*% health_count[test_data$patient_id])
 # expit
 y_hat.ss <- plogis(mu)
@@ -84,33 +84,36 @@ plot(roc(test_y, y_hat.lasso),
   print.auc = TRUE, main = "n_training = 90 (50%)"
 )
 plot(roc(test_y, y_hat.alasso),
-  print.auc = TRUE, col = 'red', add = TRUE, print.auc.y = 0.4
+  print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
 )
 plot(roc(test_y, y_hat.ss),
-  print.auc = TRUE, col = 'green', add = TRUE, print.auc.y = 0.3
+  print.auc = TRUE, col = "green", add = TRUE, print.auc.y = 0.2
 )
-legend(0, 0.2, legend = c("LASSO", "ALASSO", "Two-Step"), col = c("black","red", "green"), 
-       lty = 1, cex = 0.8)
+plot(roc(test_y, y_hat.phecap),
+  print.auc = TRUE, col = "blue", add = TRUE, print.auc.y = 0.3
+)
+legend(0, 0.3,
+  legend = c("LASSO", "ALASSO", "PheCAP", "Two-Step"),
+  col = c("black", "red", "blue", "green"),
+  lty = 1, cex = 0.8
+)
 ```
 
 ```{r}
-FPR = 0.05
-rbind(coords(roc = roc(test_y, y_hat.ss), x = FPR, input = "fpr")[-1])
-```
-
-```{r}
-FPR = 0.1
-rbind(coords(roc = roc(test_y, y_hat.ss), x = FPR, input = "fpr")[-1])
+ss.roc.full <- get_roc(test_y, y_hat.ss)
+head(ss.roc.full, 10)
 ```
 
 # Model Evaluation
-```{r}
-start<- Sys.time()
-auc_twostep <- validate_ss(dat = labeled_data, nsim = 600, 
-                    n.train = c(50, 70, 90),
-                    beta = beta.step1,
-                    S = S,
-                    x = x)
+```{r, cache=TRUE}
+start <- Sys.time()
+auc_twostep <- validate_ss(
+  dat = labeled_data, nsim = 600,
+  n.train = c(50, 70, 90),
+  beta = beta.step1,
+  S = S,
+  x = x
+)
 end <- Sys.time()
 end - start
 # median AUC
@@ -119,25 +122,37 @@ apply(auc_twostep, 2, median)
 apply(auc_twostep, 2, sd)
 ```
 ```{r}
-boxplot(auc_twostep, ylim = c(0.5, 1), names = c("n=50", "n=70", "n=90"),
-        main = "Two-Step Semi-Supervised")
+boxplot(auc_twostep,
+  ylim = c(0.5, 1), names = c("n=50", "n=70", "n=90"),
+  main = "Two-Step Semi-Supervised"
+)
 ```
 ```{r}
 # Compare with Previous method
-boxplot(cbind(auc_supervised, auc_twostep) %>% select(starts_with("n=50")), 
-        ylim = c(0.5, 1), names = c("LASSO", "ALASSO", "Two-Step"), main = "n=50")
-boxplot(cbind(auc_supervised, auc_twostep) %>% select(starts_with("n=70")), 
-        ylim = c(0.5, 1), names = c("LASSO", "ALASSO", "Two-Step"), main = "n=70")
-boxplot(cbind(auc_supervised, auc_twostep) %>% select(starts_with("n=90")), 
-        ylim = c(0.5, 1), names = c("LASSO", "ALASSO", "Two-Step"), main = "n=90")
+boxplot(cbind(auc_supervised, auc_phecap, auc_twostep)
+%>% select(starts_with("n=50")),
+ylim = c(0.5, 1), names = c("LASSO", "ALASSO","PheCAP", "Two-Step")
+, main = "n=50"
+)
+boxplot(cbind(auc_supervised, auc_phecap, auc_twostep)
+%>% select(starts_with("n=70")),
+ylim = c(0.5, 1), names = c("LASSO", "ALASSO","PheCAP", "Two-Step"), 
+main = "n=70"
+)
+boxplot(cbind(auc_supervised, auc_phecap, auc_twostep)
+%>% select(starts_with("n=90")),
+ylim = c(0.5, 1), names = c("LASSO", "ALASSO","PheCAP","Two-Step"), 
+main = "n=90"
+)
 ```
+
 # Weakly supervised learning
 ```{r, cache=TRUE}
 model_phenorm <- PheNorm.Prob(
   nm.logS.ori = "main_ICDNLP", # name of surrogates
   nm.utl = "healthcare_utilization", # name of HU
   nm.X = colnames(ehr_data)[-1:-6], # Other predictors X
-  dat = ehr_data %>% select(-patient_id,-main_ICD,-main_NLP),
+  dat = ehr_data %>% select(-patient_id, -main_ICD, -main_NLP),
   train.size = nrow(ehr_data)
 )
 ```
@@ -148,18 +163,23 @@ plot(roc(test_y, y_hat.lasso),
   print.auc = TRUE, main = "n_training = 90 (50%)"
 )
 plot(roc(test_y, y_hat.alasso),
-  print.auc = TRUE, col = 'red', add = TRUE, print.auc.y = 0.4
+  print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
+)
+plot(roc(test_y, y_hat.phecap),
+  print.auc = TRUE, col = "blue", add = TRUE, print.auc.y = 0.3
 )
 plot(roc(test_y, y_hat.ss),
-  print.auc = TRUE, col = 'green', add = TRUE, print.auc.y = 0.3
+  print.auc = TRUE, col = "green", add = TRUE, print.auc.y = 0.2
 )
 plot(roc(test_y, y_hat.phenorm),
-  print.auc = TRUE, col = 'orange', add = TRUE, print.auc.y = 0.2
+  print.auc = TRUE, col = "orange", add = TRUE, print.auc.y = 0.1
 )
 
-legend(0, 0.4, legend = c("LASSO", "ALASSO", "Two-Step", "PheNorm"), 
-       col = c("black","red", "green","orange"), 
-       lty = 1, cex = 0.8)
+legend(0, 0.4,
+  legend = c("LASSO", "ALASSO", "Two-Step", "PheCAP", "PheNorm"),
+  col = c("black", "red", "blue", "green", "orange"),
+  lty = 1, cex = 0.8
+)
 ```
 
 ```{r}
@@ -181,19 +201,24 @@ plot(roc(test_y, y_hat.lasso),
   print.auc = TRUE, main = "n_training = 90 (50%)"
 )
 plot(roc(test_y, y_hat.alasso),
-  print.auc = TRUE, col = 'red', add = TRUE, print.auc.y = 0.4
+  print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
+)
+plot(roc(test_y, y_hat.phecap),
+  print.auc = TRUE, col = "blue", add = TRUE, print.auc.y = 0.3
 )
 plot(roc(test_y, y_hat.ss),
-  print.auc = TRUE, col = 'green', add = TRUE, print.auc.y = 0.3
+  print.auc = TRUE, col = "green", add = TRUE, print.auc.y = 0.2
 )
 plot(roc(test_y, y_hat.phenorm),
-  print.auc = TRUE, col = 'orange', add = TRUE, print.auc.y = 0.2
+  print.auc = TRUE, col = "orange", add = TRUE, print.auc.y = 0.1
 )
 plot(roc(test_y, y_hat.map),
-  print.auc = TRUE, col = 'orchid', add = TRUE, print.auc.y = 0.1
+  print.auc = TRUE, col = "orchid", add = TRUE, print.auc.y = 0
 )
 
-legend(0, 0.4, legend = c("LASSO", "ALASSO", "Two-Step", "PheNorm", "MAP"), 
-       col = c("black","red", "green","orange","orchid"), 
-       lty = 1, cex = 0.8)
+legend(0, 0.4,
+  legend = c("LASSO", "ALASSO", "Two-Step", "PheCAP", "PheNorm", "MAP"),
+  col = c("black", "red", "blue", "green", "orange", "orchid"),
+  lty = 1, cex = 0.8
+)
 ```
