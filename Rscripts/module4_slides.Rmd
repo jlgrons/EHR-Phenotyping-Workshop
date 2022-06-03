@@ -33,3 +33,74 @@ package.check <- lapply(
 load("../module4/environment.RData")
 source("../Rscripts/helper_function.R")
 ```
+
+
+# 2-step Semi-supervised Approach
+i) Regress the surrogate on the features with penalized least square to get the direction of beta.
+
+```{r, cache = TRUE}
+x <- all_x %>% select(starts_with("health") | starts_with("COD") | starts_with("NLP")) # COD + NLP
+S <- ehr_data$main_ICDNLP
+
+# Step 1
+beta.step1 <- adaptive_lasso_fit(
+  y = S, # surrogate
+  x = x, # all X
+  family = "gaussian",
+  tuning = "cv"
+)
+
+# Features selected
+names(beta.step1[abs(beta.step1) > 0])[-1]
+```
+
+# 2-step Semi-supervised Approach
+i) Regress the surrogate on the features with penalized least square to get the direction of beta.
+
+(ii) Regress the outcome on the linear predictor to get the intercept and multiplier for the beta.
+```{r}
+# linear predictor without intercept
+bhatx <- linear_model_predict(beta = beta.step1, x = as.matrix(x))
+
+# Step 2
+step2 <- glm(train_y ~ bhatx[train_data$patient_id] + S[train_data$patient_id] +
+  health_count[train_data$patient_id])
+beta_step2 <- coef(step2)
+beta_step2
+```
+
+```{r}
+# recover beta
+beta <- beta_step2[2] * beta.step1
+# mu
+mu <- beta_step2[1] +
+  as.numeric(as.matrix(x[test_data$patient_id, ]) %*% beta[-1]) +
+  as.numeric(beta_step2[3] %*% S[test_data$patient_id]) +
+  as.numeric(beta_step2[4] %*% health_count[test_data$patient_id])
+# expit
+y_hat.ss <- plogis(mu)
+```
+
+
+# ROC
+```{r}
+plot(roc(test_y, y_hat.lasso),
+  print.auc = TRUE, main = "n_training = 106 (60%)"
+)
+plot(roc(test_y, y_hat.alasso),
+  print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
+)
+plot(roc(test_y, y_hat.ss),
+  print.auc = TRUE, col = "green", add = TRUE, print.auc.y = 0.2
+)
+plot(roc(test_y, y_hat.phecap),
+  print.auc = TRUE, col = "blue", add = TRUE, print.auc.y = 0.3
+)
+legend(0, 0.3,
+  legend = c("LASSO", "ALASSO", "PheCAP", "Two-Step"),
+  col = c("black", "red", "blue", "green"),
+  lty = 1, cex = 0.8
+)
+```
+
+
