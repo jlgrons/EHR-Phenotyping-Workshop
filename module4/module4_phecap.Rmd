@@ -41,7 +41,8 @@ source("../Rscripts/helper_function.R")
 (i) Regress the surrogate on the features with penalized least square to get the direction of beta.
 
 ```{r}
-x <- all_x %>% select(starts_with("COD") | starts_with("NLP")) # COD + NLP
+x <- all_x %>% select(starts_with("COD") | starts_with("NLP") | 
+                        starts_with("healthcare_utilization")) # COD + NLP
 S <- ehr_data$main_ICDNLP
 
 # Step 1
@@ -62,8 +63,8 @@ names(beta.step1[abs(beta.step1) > 0])[-1]
 bhatx <- linear_model_predict(beta = beta.step1, x = as.matrix(x))
 
 # Step 2
-step2 <- glm(train_y ~ bhatx[train_data$patient_id] + S[train_data$patient_id] +
-  health_count[train_data$patient_id])
+step2 <- glm(train_y ~ bhatx[train_data$patient_id] + S[train_data$patient_id], 
+             family = "binomial")
 beta_step2 <- coef(step2)
 beta_step2
 ```
@@ -73,8 +74,7 @@ beta <- beta_step2[2] * beta.step1
 # mu
 mu <- beta_step2[1] +
   as.numeric(as.matrix(x[test_data$patient_id, ]) %*% beta[-1]) +
-  as.numeric(beta_step2[3] %*% S[test_data$patient_id]) +
-  as.numeric(beta_step2[4] %*% health_count[test_data$patient_id])
+  as.numeric(beta_step2[3] %*% S[test_data$patient_id])
 # expit
 y_hat.ss <- plogis(mu)
 ```
