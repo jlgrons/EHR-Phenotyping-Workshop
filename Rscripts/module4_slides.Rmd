@@ -32,6 +32,8 @@ package.check <- lapply(
 # load environment from example 1
 load("../module4/environment.RData")
 source("../Rscripts/helper_function.R")
+
+# format slides nicely please
 ```
 
 
@@ -79,6 +81,9 @@ mu <- beta_step2[1] +
   as.numeric(beta_step2[4] %*% health_count[test_data$patient_id])
 # expit
 y_hat.ss <- plogis(mu)
+
+
+# add feature comparison here to lasso, alsso, phecap
 ```
 
 
