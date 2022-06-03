@@ -38,6 +38,7 @@ load("environment.RData")
 
 
 ```{r include=FALSE}
+data(ehr_data)
 data <- PhecapData(PheCAP::ehr_data, "healthcare_utilization", "label", 75,
   patient_id = "patient_id", seed = 123
 )
@@ -103,7 +104,7 @@ length(test_y)
 ```{r}
 # Choose best lambda using CV
 beta.lasso <- lasso_fit(
-  x = train_x, y = train_y,
+  x = log(train_x + 1), y = train_y,
   tuning = "cv", family = "binomial"
 )
 ```
@@ -119,7 +120,7 @@ names(beta.lasso[abs(beta.lasso) > 0])[-1]
 ```{r}
 # Fit Adaptive LASSO
 beta.alasso <- adaptive_lasso_fit(
-  x = train_x, y = train_y,
+  x = log(train_x + 1), y = train_y,
   tuning = "cv", family = "binomial"
 )
 ```
@@ -140,7 +141,7 @@ names(beta.lasso[abs(beta.lasso) > 0])[-1]
 ```{r}
 # Prediction on testing set (LASSO)
 y_hat.lasso <- linear_model_predict(
-  beta = beta.lasso, x = test_x,
+  beta = beta.lasso, x = log(test_x + 1),
   probability = TRUE
 )
 ```
@@ -148,7 +149,7 @@ y_hat.lasso <- linear_model_predict(
 ```{r}
 # Prediction on testing set (ALASSO)
 y_hat.alasso <- linear_model_predict(
-  beta = beta.alasso, x = test_x,
+  beta = beta.alasso, x = log(test_x + 1),
   probability = TRUE
 )
 ```
