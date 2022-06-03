@@ -1,6 +1,5 @@
 ---
 title: "Module 1: Introduction to PheCAP data"
-author: "Siyue Yang, Jianhui Gao, and Jessica Gronsbell"
 output: pdf_document
 ---
 
