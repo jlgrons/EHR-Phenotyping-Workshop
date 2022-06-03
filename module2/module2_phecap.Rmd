@@ -53,8 +53,8 @@ labeled_data <- ehr_data %>% dplyr::filter(!is.na(label))
 
 # All Features
 all_x <- ehr_data %>% dplyr::select(
-  starts_with("COD"), starts_with("NLP"),
-  starts_with("main"), healthcare_utilization
+    starts_with("COD"), starts_with("NLP"),
+    "main_ICD","main_NLP",healthcare_utilization
 )
 health_count <- ehr_data$healthcare_utilization
 
@@ -63,7 +63,7 @@ train_data <- ehr_data %>% dplyr::filter(patient_id %in% data$training_set)
 train_x <- train_data %>%
   dplyr::select(
     starts_with("COD"), starts_with("NLP"),
-    starts_with("main"), healthcare_utilization
+    "main_ICD","main_NLP",healthcare_utilization
   ) %>%
   as.matrix()
 train_y <- train_data %>%
@@ -75,7 +75,7 @@ test_data <- ehr_data %>% dplyr::filter(patient_id %in% data$validation_set)
 test_x <- test_data %>%
   dplyr::select(
     starts_with("COD"), starts_with("NLP"),
-    starts_with("main"), healthcare_utilization
+    "main_ICD","main_NLP",healthcare_utilization
   ) %>%
   as.matrix()
 test_y <- test_data %>%
@@ -165,7 +165,7 @@ get_roc_parameter(0.1, roc_full.alasso)
 ```{r, cache=TRUE}
 start <- Sys.time()
 auc_supervised <- validate_supervised(
-  dat = labeled_data, nsim = 600,
+  dat = labeled_data[, -5], nsim = 600,
   n.train = c(50, 70, 90)
 )
 end <- Sys.time()
@@ -205,6 +205,10 @@ boxplot(auc_supervised[, 4:6],
   names = c("n=50", "n=70", "n=90"), main = "ALASSO"
 )
 ```
+```{r}
+save.image(file='../module3/environment.RData')
+```
+
 
 # Appendix
 
@@ -292,3 +296,4 @@ boxplot(cbind(auc_supervised, auc_rfandsvm) %>% select(starts_with("n=90")),
   names = c("LASSO", "ALASSO", "Random Forest", "SVM"), main = "n=90"
 )
 ```
+
