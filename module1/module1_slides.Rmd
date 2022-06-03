@@ -7,7 +7,8 @@ output: beamer_presentation
 # CAD data overview
 
 - This data mart is a random sample of patients in the Mass General Brigham (formerly Partner's Healthcare) EHR database who had at least one note of 500 characters and met an initial filter for coronary artery disease (CAD) defined as: 
-    - $\geq$ 1 ICD9 code related to CAD (410.x, 411.x, 412.x, 413.x, 414.x) 
+
+    - $\geq$ 1 ICD9 code related to CAD (410.x, 411.x, 412.x, 413.x, 414.x)
     - $\ge$ 1 mention for any CAD related concepts (eg. CAD, CAD procedures, CAD biomarkers, positive stress test)
 
 ---
@@ -39,7 +40,7 @@ source("../Rscripts/helper_function.R")
 ```
 
 
-# Read in the CAD data
+# CAD data features
 ```{r size = 'tiny'}
 data(ehr_data)
 data <- PhecapData(ehr_data, "healthcare_utilization",
@@ -48,7 +49,7 @@ data <- PhecapData(ehr_data, "healthcare_utilization",
 data
 ```
 
-- Label: "label", whether the patient has CAD, **extracted from chart review by a clinician**
+- Label: whether the patient has CAD, **extracted from chart review by a clinician**
 
 
 # Read in the CAD data
@@ -94,7 +95,7 @@ ehr_data[, feature_index] %>%
 
 # Prepare the data for model fitting
 
-- We log transform all the features as they are highly skewed
+- We transform all features with $x \rightarrow log(x+1)$ as they are highly skewed
 
 
 - We orthogonalize all features against health care utilization before fitting as patients with higher healthcare utilization have higher feature counts 

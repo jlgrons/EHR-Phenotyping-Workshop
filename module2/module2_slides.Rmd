@@ -156,7 +156,9 @@ y_hat.alasso <- linear_model_predict(
 ```{r}
 roc.lasso <- roc(test_y, y_hat.lasso)
 roc.alasso <- roc(test_y, y_hat.alasso)
+# as expected alasso selects less features
 ```
+
 
 # LASSO vs. ALASSO
 
@@ -171,6 +173,13 @@ legend(0, 0.2,
   legend = c("LASSO", "ALASSO"), col = c("black", "red"),
   lty = 1, cex = 0.8
 )
+
+## Please change ROC plots to TPR and FPR so it matches the output
+## Unify the format for all plots -titles, colors, axis, etc
+## Make legends bigger
+## Make axis and axis marks bigger - titles - everything so it easy to see
+## Use ggplot for all plots - use default colors
+## Jianhui uses . for separating words in variables, Siyue uses _ : pick one, I prefer _
 ```
 
 # LASSO vs. ALASSO at FPR = 0.10
@@ -213,6 +222,9 @@ boxplot(auc_supervised %>% select(starts_with("n=90")),
   ylim = c(0.5, 1),
   names = c("LASSO", "ALASSO"), main = "n=90"
 )
+
+# Use ggplot
+# Remove outlier for box plot
 ```
 
 # Random Forest and SVM
@@ -224,6 +236,10 @@ model_rf <- rfsrc(y ~ ., data = data.frame(y = train_y, x = train_x))
 y_hat.rf <- predict(model_rf, 
                     newdata = data.frame(x = test_x))$predicted
 roc.rf <- roc(test_y, y_hat.rf)
+# Use the Phecap functions to compute lasso, alssso etc and be consistnet
+# clean the helper functions to only have what you need
+# same for packages
+# Make sure the slides match the markdown - please update
 ```
 
 ```{r}

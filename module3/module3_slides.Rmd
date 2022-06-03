@@ -42,6 +42,7 @@ source("../Rscripts/helper_function.R")
 # Surrogates for CAD
 
 ```{r, include = FALSE}
+# Phecap was implemented incorrectly - please fix it 
 icd <- ehr_data %>%
   filter(!is.na(label)) %>%
   mutate(disease = factor(label)) %>%
@@ -143,6 +144,8 @@ y_hat.phecap <- linear_model_predict(beta = phecap_lasso$coefficients$lasso_cv,
                                      x = test_x[, vars],
                                      probability = TRUE)
 roc.phecap <- roc(test_y, y_hat.phecap)
+
+# compare selected features to alasso + lasso
 ```
 
 ```{r}
@@ -162,6 +165,9 @@ legend(0, 0.2, legend = c("LASSO", "ALASSO", "PheCAP"), col = c("black","red", "
 
 # Supervised learning vs. PheCAP for different training size
 ```{r, cache = TRUE}
+# add the comparison here 
+
+
 # selected_index <- which(colnames(ehr_data) %in% vars)
 # start<- Sys.time()
 # auc_phecap <- validate_phecap(dat = labeled_data, nsim = 600, 
