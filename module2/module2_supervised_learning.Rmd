@@ -93,11 +93,11 @@ beta.lasso <- lasso_fit(
 )
 ```
 
-
 ```{r}
 # Features Selected
 names(beta.lasso[abs(beta.lasso) > 0])[-1]
 ```
+
 ```{r}
 # prediction on testing set
 y_hat.lasso <- linear_model_predict(
@@ -126,7 +126,7 @@ roc.lasso <- roc(test_y, y_hat.lasso)
 roc.alasso <- roc(test_y, y_hat.alasso)
 
 plot(roc.lasso,
-  print.auc = TRUE, main = "n_training = 106 (40%)"
+  print.auc = TRUE, main = paste0("n_training = ", nrow(train_x))
 )
 plot(roc.alasso,
   print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
@@ -143,6 +143,7 @@ legend(0, 0.2,
 roc_full.lasso <- get_roc(y_true = test_y, y_score = y_hat.lasso) %>% data.frame()
 get_roc_parameter(0.05, roc_full.lasso)
 ```
+
 ```{r}
 roc_full.lasso <- get_roc(y_true = test_y, y_score = y_hat.lasso) %>% data.frame()
 get_roc_parameter(0.1, roc_full.lasso)
@@ -152,6 +153,7 @@ get_roc_parameter(0.1, roc_full.lasso)
 roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso) %>% data.frame()
 get_roc_parameter(0.05, roc_full.alasso)
 ```
+lstlisting
 ```{r}
 roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso) %>% data.frame()
 get_roc_parameter(0.1, roc_full.alasso)
@@ -218,7 +220,7 @@ y_hat.rf <- predict(model_rf, newdata = data.frame(x = test_x))$predicted
 roc.rf <- roc(test_y, y_hat.rf)
 
 plot(roc.lasso,
-  print.auc = TRUE, main = "n_training = 106 (40%)"
+  print.auc = TRUE, main = paste0("n_training = ", nrow(train_x))
 )
 plot(roc.alasso,
   print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
@@ -242,7 +244,7 @@ y_hat.svm <- predict(model_svm, test_x)
 roc.svm <- roc(test_y, y_hat.svm)
 
 plot(roc.lasso,
-  print.auc = TRUE, main = "n_training = 106 (40%)"
+  print.auc = TRUE, main = paste0("n_training = ", nrow(train_x))
 )
 plot(roc.alasso,
   print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4

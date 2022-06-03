@@ -1,6 +1,5 @@
 ---
 title: "Module 3: Semi-supervised learning (PheCAP)"
-author: "Siyue Yang, Jianhui Gao, and Jessica Gronsbell"
 output:
   pdf_document: default
   html_document: default

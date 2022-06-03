@@ -1,0 +1,191 @@
+---
+title: "Module 3: Semi-supervised learning (PheCAP)"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r, include=FALSE}
+# Load the packages. 
+packages <- c("tidyverse", "PheCAP", "glmnet", "glmpath", 
+              "pROC", "parallel", "ggpubr")
+
+# Check if the packages are missing or not. 
+# If missing, install automatically.
+# If not missing, load the package.
+package.check <- lapply(
+	  packages,
+	  FUN = function(x) {
+	    if (!require(x, character.only = TRUE)) {
+	      install.packages(x, dependencies = TRUE)
+	      library(x, character.only = TRUE)
+	    }
+	  }
+	)
+```
+
+```{r, include = FALSE}
+data(ehr_data)
+data <- PhecapData(ehr_data, "healthcare_utilization", "label", 75,
+                   "patient_id", seed = 123)
+data
+```
+
+```{r, include=FALSE}
+# Load helper functions.
+source("../Rscripts/helper_function.R")
+```
+
+
+# Surrogates for CAD
+
+```{r, include = FALSE}
+icd <- ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = log(main_ICD + 1))) +
+  geom_density(aes(color = disease))
+
+nlp <- ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = log(main_NLP + 1))) +
+  geom_density(aes(color = disease))
+
+ehr_data$main_ICDNLP <- ehr_data$main_ICD + ehr_data$main_NLP
+
+
+icd_nlp <- ehr_data %>%
+  filter(!is.na(label)) %>%
+  mutate(disease = factor(label)) %>%
+  ggplot(aes(x = log(main_ICDNLP + 1))) +
+  geom_density(aes(color = disease))
+```
+
+```{r, echo = FALSE}
+figure <- ggarrange(icd, nlp, icd_nlp,
+                    labels = c("ICD", "NLP", "ICD + NLP"),
+                    ncol = 2, nrow = 2)
+figure
+```
+
+The more the disease-related codes and NLP mentions, the more **likely** the patient has the disease
+
+
+# ROC Surrogates
+
+\tiny
+```{r, warning=FALSE, include = FALSE}
+nonmissing_index <- which(!is.na(ehr_data$label))
+y <- ehr_data$label[nonmissing_index]
+sicd <- ehr_data$main_ICD
+snlp <- ehr_data$main_NLP 
+sicdnlp <- ehr_data$main_ICDNLP
+
+# Prepare features to be selected. 
+x <- data.matrix(ehr_data %>% select(starts_with("COD") | starts_with("NLP")))
+```
+
+```{r, echo = FALSE}
+roc.icd <- roc(y, sicd[nonmissing_index])
+roc.nlp <- roc(y, snlp[nonmissing_index])
+roc.icdnlp <- roc(y, sicdnlp[nonmissing_index])
+
+plot(roc.icd,
+  print.auc = TRUE, main = "Surrogate ROC"
+)
+plot(roc.nlp,
+  print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
+)
+plot(roc.icdnlp,
+  print.auc = TRUE, col = "blue", add = TRUE, print.auc.y = 0.3
+)
+legend(0, 0.2,
+  legend = c("ICD", "NLP", "ICD+NLP"), col = c("black", "red", "blue"),
+  lty = 1, cex = 0.8
+)
+```
+
+# Step 1: SAFE 
+
+```{r, cache=TRUE}
+surrogates <- list(
+  PhecapSurrogate(
+    variable_names = "main_ICD",
+    lower_cutoff = 1, upper_cutoff = 10),
+  PhecapSurrogate(
+    variable_names = "main_NLP",
+    lower_cutoff = 1, upper_cutoff = 10),
+  PhecapSurrogate(
+    variable_names = c("main_ICD", "main_NLP"),
+    lower_cutoff = 1, upper_cutoff = 10))
+
+feature_selected <- phecap_run_feature_extraction(data, surrogates)
+```
+
+# Step 2: Orthogonalization + supervised learning
+```{r}
+phecap_lasso <- phecap_train_phenotyping_model(data, surrogates, feature_selected,
+                                        method = "lasso_cv")
+```
+
+```{r}
+# Load environment.
+load("environment_phecap.RData")
+```
+
+```{r, include = FALSE}
+vars <- names(phecap_lasso$coefficients$lasso_cv)[-1]
+vars[vars == "main_ICD&main_NLP"] <- "main_ICDNLP" 
+y_hat.phecap <- linear_model_predict(beta = phecap_lasso$coefficients$lasso_cv, 
+                                     x = test_x[, vars],
+                                     probability = TRUE)
+roc.phecap <- roc(test_y, y_hat.phecap)
+```
+
+```{r}
+plot(roc.lasso,
+  print.auc = TRUE, main = "n_training = 90 (50%)"
+)
+plot(roc.alasso,
+  print.auc = TRUE, col = 'red', add = TRUE, print.auc.y = 0.4
+)
+plot(roc.phecap,
+  print.auc = TRUE, col = 'blue', add = TRUE, print.auc.y = 0.3
+)
+legend(0, 0.2, legend = c("LASSO", "ALASSO", "PheCAP"), col = c("black","red", "blue"), 
+       lty = 1, cex = 0.8)
+```
+
+
+# Supervised learning vs. PheCAP for different training size
+```{r, cache = TRUE}
+selected_index <- which(colnames(ehr_data) %in% vars)
+start<- Sys.time()
+auc_phecap <- validate_phecap(dat = labeled_data, nsim = 600, 
+                              n.train = c(50, 70, 90),
+                              selected_features = selected_index)
+end <- Sys.time()
+end - start
+
+auc_all <- cbind(auc_supervised, auc_phecap)
+```
+
+
+```{r}
+par(mfrow = c(1, 3))
+boxplot(auc_all %>% select(starts_with("n=50")),
+  ylim = c(0.5, 1),
+  names = c("LASSO", "ALASSO", "PheCAP"), main = "n=50"
+)
+boxplot(auc_all %>% select(starts_with("n=70")),
+  ylim = c(0.5, 1),
+  names =  c("LASSO", "ALASSO", "PheCAP"), main = "n=70"
+)
+boxplot(auc_all %>% select(starts_with("n=90")),
+  ylim = c(0.5, 1),
+  names =  c("LASSO", "ALASSO", "PheCAP"), main = "n=90"
+)
+```
