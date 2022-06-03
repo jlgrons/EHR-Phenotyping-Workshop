@@ -103,4 +103,78 @@ legend(0, 0.3,
 )
 ```
 
+# Model Evaluation
+```{r, cache=TRUE}
+start <- Sys.time()
+auc_twostep <- validate_ss(
+  dat = labeled_data, nsim = 600,
+  n.train = c(50, 70, 90),
+  beta = beta.step1,
+  S = S,
+  x = x
+)
+end <- Sys.time()
+end - start
+```
 
+
+
+
+```{r}
+par(mfrow = c(1,3))
+# Compare with Previous method
+boxplot(cbind(auc_supervised, auc_phecap, auc_twostep)
+%>% select(starts_with("n=50")),
+ylim = c(0.5, 1), names = c("LASSO", "ALASSO","PheCAP", "Two-Step")
+, main = "n=50"
+)
+boxplot(cbind(auc_supervised, auc_phecap, auc_twostep)
+%>% select(starts_with("n=70")),
+ylim = c(0.5, 1), names = c("LASSO", "ALASSO","PheCAP", "Two-Step"), 
+main = "n=70"
+)
+boxplot(cbind(auc_supervised, auc_phecap, auc_twostep)
+%>% select(starts_with("n=90")),
+ylim = c(0.5, 1), names = c("LASSO", "ALASSO","PheCAP","Two-Step"), 
+main = "n=90"
+)
+```
+
+## MAP
+```{r}
+# Use untransformed data; MAP requires sparse matrix
+# Create sparse matrix for surroagtes
+data_fit <- sparsify(PheCAP::ehr_data %>%
+  select(main_ICD, main_NLP) %>%
+  rename(ICD = main_ICD) %>% data.table())
+
+# Create sparse matrix for HU
+note <- Matrix(PheCAP::ehr_data$healthcare_utilization, ncol = 1, sparse = TRUE)
+model_map <- MAP(mat = data_fit, note = note, full.output = TRUE)
+
+y_hat.map <- model_map$scores[data$validation_set]
+```
+
+```{r}
+plot(roc(test_y, y_hat.lasso),
+  print.auc = TRUE, main = "n_training = 106 (60%)"
+)
+plot(roc(test_y, y_hat.alasso),
+  print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
+)
+plot(roc(test_y, y_hat.phecap),
+  print.auc = TRUE, col = "blue", add = TRUE, print.auc.y = 0.3
+)
+plot(roc(test_y, y_hat.ss),
+  print.auc = TRUE, col = "green", add = TRUE, print.auc.y = 0.2
+)
+plot(roc(test_y, y_hat.map),
+  print.auc = TRUE, col = "orange", add = TRUE, print.auc.y = 0
+)
+
+legend(0, 0.4,
+  legend = c("LASSO", "ALASSO", "PheCAP","Two-Step",  "PheNorm", "MAP"),
+  col = c("black", "red", "blue", "green", "orange"),
+  lty = 1, cex = 0.8
+)
+```
