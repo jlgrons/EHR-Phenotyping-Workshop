@@ -192,7 +192,7 @@ legend(0, 0.4,
 # Use untransformed data; MAP requires sparse matrix
 # Create sparse matrix for surroagtes
 data_fit <- sparsify(PheCAP::ehr_data %>%
-  select(main_ICD, main_NLP) %>%
+  select(main_ICD, main_NLP, main_ICDNLP) %>%
   rename(ICD = main_ICD) %>% data.table())
 
 # Create sparse matrix for HU
