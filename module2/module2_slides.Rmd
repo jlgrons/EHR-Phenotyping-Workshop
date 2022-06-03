@@ -127,7 +127,8 @@ beta.alasso <- adaptive_lasso_fit(
 
 \tiny
 ```{r}
-# ALASSO features selected
+# ALASSO features selected - we show the features, please also print out the standardized coefficients so we can see relative magnitudes.
+
 names(beta.alasso[abs(beta.alasso) > 0])[-1]
 ```
 
