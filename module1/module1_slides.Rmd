@@ -1,0 +1,100 @@
+---
+title: "Module 1: Introduction"
+output: beamer_presentation
+---
+
+
+# CAD data overview
+
+- This data mart is a random sample of patients in the Mass General Brigham (formerly Partner's Healthcare) EHR database who had at least one note of 500 characters and met an initial filter for coronary artery disease (CAD) defined as: 
+    - $\geq$ 1 ICD9 code related to CAD (410.x, 411.x, 412.x, 413.x, 414.x) 
+    - $\ge$ 1 mention for any CAD related concepts (eg. CAD, CAD procedures, CAD biomarkers, positive stress test)
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r, echo = F}
+# Packages required for this module.
+packages <- c("tidyverse", "PheCAP", "corrplot", "ggplot2")
+
+# Load packages, or install if missing.
+package.check <- lapply(
+	  packages,
+	  FUN = function(x) {
+	    if (!require(x, character.only = TRUE)) {
+	      install.packages(x, dependencies = TRUE)
+	      library(x, character.only = TRUE)
+	    }
+	  }
+	)
+```
+
+
+```{r, echo = F}
+# Load helper functions.
+source("../Rscripts/helper_function.R")
+```
+
+
+# Read in the CAD data
+```{r size = 'tiny'}
+data(ehr_data)
+data <- PhecapData(ehr_data, "healthcare_utilization",
+                   "label", 75,
+                   "patient_id", seed = 123)
+data
+```
+
+- Label: "label", whether the patient has CAD, **extracted from chart review by a clinician**
+
+
+# Read in the CAD data
+
+- Features:
+  - "main_ICD", "main_NLP" refers to total number of billing codes or NLP mentions of the disease
+  - "healthcare_utilization" refers to total number of notes the patient has
+  - “CODx” (n = 10) refers to the counts of a specific code
+  - “NLPx” (n = 574) refers to the counts of a NLP term
+
+\tiny
+```{r}
+str(ehr_data[, c(1:5, 25:30)])
+```
+
+
+# Basic descriptives
+
+\tiny
+```{r}
+# Check for missing data
+colnames(ehr_data)[which( colMeans(is.na(ehr_data)) > 0)]
+```
+
+
+```{r}
+# Prevalence of the label
+mean(ehr_data$label, na.rm = TRUE)
+```
+
+# Feature distributions
+
+- The features are highly skewed
+
+```{r echo = FALSE}
+set.seed(99)
+feature_index <- sample(c(3:ncol(ehr_data)), 10, replace = FALSE)
+ehr_data[, feature_index] %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "count") %>%
+  ggplot() +
+  geom_density(aes(x = count, color = feature))
+```
+
+# Prepare the data for model fitting
+
+- We log transform all the features as they are highly skewed
+
+
+- We orthogonalize all features against health care utilization before fitting as patients with higher healthcare utilization have higher feature counts 
