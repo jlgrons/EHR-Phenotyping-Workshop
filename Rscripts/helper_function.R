@@ -757,7 +757,7 @@ validate_supervised <- function(dat, nsim, n.train = c(50, 70, 90)) {
 }
 
 # 2 Step AUC
-twostep_pred <- function(train_data, test_data, X, S, health_count, beta.step1) {
+twostep_pred <- function(train_data, test_data, X, S, beta.step1) {
 
   # linear predictor without intercept
   bhatx <- linear_model_predict(beta = beta.step1, x = as.matrix(X))
@@ -765,15 +765,14 @@ twostep_pred <- function(train_data, test_data, X, S, health_count, beta.step1) 
   idx <- train_data$patient_id
   idy <- test_data$patient_id
   model2ssl_step2 <- glm(
-    train_data$label ~ bhatx[idx] + S[idx] + health_count[idx]
+    train_data$label ~ bhatx[idx] + S[idx], family = "binomial"
   )
   beta_step2 <- coef(model2ssl_step2)
   # recover beta
   beta <- beta_step2[2] * beta.step1
   mu <- beta_step2[1] +
     as.numeric(as.matrix(X[test_data$patient_id, ]) %*% beta[-1]) +
-    as.numeric(beta_step2[3] %*% S[test_data$patient_id]) +
-    as.numeric(beta_step2[4] %*% health_count[test_data$patient_id])
+    as.numeric(beta_step2[3] %*% S[test_data$patient_id])
   # expit
   y_hat.ss <- plogis(mu)
 }
@@ -829,7 +828,6 @@ validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
           test_data = ehr_data[id.y[[i]], ],
           X = x,
           S = S,
-          health_count = health_count,
           beta.step1 = beta
         )
       )
