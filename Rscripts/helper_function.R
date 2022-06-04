@@ -28,12 +28,11 @@ plot_sims <- function(data, legend, n_total_method = 7, method_index) {
       n = gsub(",.*$", "", key),
       method = sub(".*,\\s*", "", key)
     ) 
-  
-  plot_data$method <- factor(plot_data$method, levels = c("LASSO", "ALASSO", "PheCAP", "Two-step"))
 
   plot_data %>%
     ggplot(aes(y = value, color = method)) +
-    scale_colour_manual(values = scales::hue_pal()(n_total_method)[method_index]) +
+    scale_colour_manual(values = scales::hue_pal()(n_total_method)[method_index],
+                        labels = legend) +
     geom_boxplot(outlier.shape = NA) +
     facet_wrap(. ~ n) +
     ggtitle("Area under the ROC curve (AUC) from 600 simulations") +

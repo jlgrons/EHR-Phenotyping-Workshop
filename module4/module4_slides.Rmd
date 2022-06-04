@@ -117,15 +117,9 @@ roc_twostep <- roc(test_y, y_hat_twostep)
 
 # ROC
 ```{r, echo=FALSE}
-ggroc(list(roc_lasso, roc_alasso, roc_twostep, roc_phecap), legacy.axes = TRUE) +
-  scale_color_discrete(labels = c(
-    paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
-    paste("Two-Step, AUC =", round(auc(roc_twostep), 3)),
-    paste("ALASSO, AUC =", round(auc(roc_alasso), 3)),
-    paste("PheCAP, AUC =", round(auc(roc_phecap), 3))
-  )) + theme(legend.position = "bottom") +
-  ggtitle("The operating receiver characteristic (ROC) curve") +
-  guides(color = guide_legend(ncol = 2, title = element_blank()))
+plot_roc(list(roc_lasso, roc_alasso, roc_phecap, roc_twostep),
+         legend = c("LASSO", "ALASSO", "PheCAP", "Two-step"),
+         method_index = c(1,2,5,6))
 ```
 
 # Model Evaluation
@@ -142,19 +136,9 @@ auc_twostep <- validate_ss(
 
 
 ```{r, echo=FALSE}
-tidyr::gather(cbind(auc_supervised, auc_twostep, auc_phecap)) %>%
-  mutate(
-    n = gsub(",.*$", "", key),
-    method = sub(".*,\\s*", "", key)
-  ) %>%
-  ggplot(aes(y = value, color = method)) +
-  geom_boxplot(outlier.shape = NA) +
-  facet_wrap(. ~ n) +
-  ggtitle("Area under the ROC curve (AUC) from 600 simulations") +
-  theme(
-    legend.position = "bottom", axis.text.x = element_blank(),
-    axis.ticks = element_blank()
-  )
+plot_sims(cbind(auc_supervised, auc_phecap, auc_twostep),
+          legend = c("LASSO", "ALASSO", "PheCAP", "Two-step"),
+          method_index = c(1,2,5,6))
 ```
 
 # MAP
@@ -181,13 +165,7 @@ roc_map <- roc(test_y, y_hat_map)
 # ROC
 
 ```{r, echo=FALSE}
-ggroc(list(roc_lasso, roc_alasso, roc_twostep, roc_map), legacy.axes = TRUE) +
-  scale_color_discrete(labels = c(
-    paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
-    paste("ALASSO, AUC =", round(auc(roc_alasso), 3)),
-    paste("Two-Step, AUC =", round(auc(roc_twostep), 3)),
-    paste("MAP, AUC =", round(auc(roc_map), 3))
-  )) + theme(legend.position = "bottom") +
-  ggtitle("The operating receiver characteristic (ROC) curve") +
-  guides(color = guide_legend(ncol = 2, title = element_blank()))
+plot_roc(list(roc_lasso, roc_alasso, roc_phecap, roc_twostep, roc_map),
+         legend = c("LASSO", "ALASSO", "PheCAP", "Two-step", "MAP"),
+         method_index = c(1,2,5,6,7))
 ```
