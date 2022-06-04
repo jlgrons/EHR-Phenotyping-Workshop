@@ -5,7 +5,7 @@ library(glmpath)
 ################### Plotting  ###################################
 #################################################################
 
-plot_roc <- function(rocs,legend, n_total_method = 7) {
+plot_roc <- function(rocs, legend, n_total_method = 7) {
   
   label_text <- c()
   for (i in c(1:length(rocs))) {
@@ -19,6 +19,26 @@ plot_roc <- function(rocs,legend, n_total_method = 7) {
     ggtitle("The operating receiver characteristic (ROC) curve") + 
     guides(color = guide_legend(title = element_blank())) + 
     labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)")
+}
+
+plot_sims <- function(data, legend, n_total_method = 7) {
+  
+  plot_data <- tidyr::gather(data) %>%
+    mutate(
+      n = gsub(",.*$", "", key),
+      method = sub(".*,\\s*", "", key)
+    ) 
+  
+  plot_data$method <- factor(plot_data$method, levels = c("LASSO", "ALASSO", "PheCAP", "Two-step"))
+
+  plot_data %>%
+    ggplot(aes(y = value, color = method)) +
+    scale_colour_manual(values = scales::hue_pal()(n_total_method)[1:length(legend)]) +
+    geom_boxplot(outlier.shape = NA) +
+    facet_wrap(. ~ n) +
+    ggtitle("Area under the ROC curve (AUC) from 600 simulations") +
+    theme(text = element_text(size = 20)) +
+    theme(legend.position = "bottom", axis.text.x = element_blank(), axis.ticks = element_blank())
 }
 
 #################################################################
