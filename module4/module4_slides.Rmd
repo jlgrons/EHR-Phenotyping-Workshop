@@ -80,6 +80,7 @@ beta <- beta_step2[2] * beta_step1
 # Compare selected features
 
 \tiny
+
 ```{r}
 # LASSO.
 names(beta_lasso[!beta_lasso == 0])[-1]
@@ -89,6 +90,10 @@ names(beta_lasso[!beta_lasso == 0])[-1]
 # ALASSO.
 names(beta_alasso[!beta_alasso == 0])[-1]
 ```
+
+# Compare selected features
+
+\tiny 
 
 ```{r}
 # PheCAP.
