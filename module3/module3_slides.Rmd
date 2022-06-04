@@ -41,19 +41,21 @@ icd <- ehr_data %>%
   filter(!is.na(label)) %>%
   mutate(disease = factor(label)) %>%
   ggplot(aes(x = log(main_ICD + 1))) +
-  geom_density(aes(color = disease))
+  geom_density(aes(color = disease)) +
+  theme(text = element_text(size = 15)) +
+  ggtitle("Density plot of the main ICD codes")
 
 nlp <- ehr_data %>%
   filter(!is.na(label)) %>%
   mutate(disease = factor(label)) %>%
   ggplot(aes(x = log(main_NLP + 1))) +
-  geom_density(aes(color = disease))
+  geom_density(aes(color = disease)) +
+  theme(text = element_text(size = 15)) +
+  ggtitle("Density plot of the main NLP codes")
 ```
 
-```{r, fig.height=3, echo=FALSE}
-figure <- ggarrange(icd, nlp,
-                    labels = c("ICD", "NLP"),
-                    ncol = 2, nrow = 1)
+```{r, fig.height=4, echo=FALSE}
+figure <- ggarrange(icd, nlp, ncol = 2, nrow = 1, common.legend = TRUE)
 figure
 ```
 
@@ -76,14 +78,7 @@ x <- data.matrix(ehr_data %>% select(starts_with("COD") | starts_with("NLP")))
 ```
 
 ```{r, echo=FALSE}
-ggroc(list(roc_icd, roc_nlp), legacy.axes = TRUE) +
-  scale_color_discrete(labels = c(
-    paste("ICD, AUC =", round(auc(roc_icd), 3)),
-    paste("NLP, AUC =", round(auc(roc_nlp), 3))
-  )) + theme(legend.position = "bottom") +
-  ggtitle("The operating receiver characteristic (ROC) curve") + 
-  guides(color = guide_legend(ncol = 2, title = element_blank())) + 
-  labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)")
+plot_roc(list(roc_icd, roc_nlp), legend = c("ICD", "NLP"))
 ```
 
 # Step 1: SAFE 
@@ -122,18 +117,22 @@ y_hat_phecap <- phenotype[test_data$patient_id, "prediction"]
 roc_phecap <- roc(test_y, y_hat_phecap)
 ```
 
+
 # Supervised learning (LASSO, ALASSO) vs. PheCAP 
 
 ```{r, echo = FALSE}
-ggroc(list(roc_lasso, roc_alasso, roc_phecap), legacy.axes = TRUE) +
-  scale_color_discrete(labels = c(
-    paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
-    paste("ALASSO, AUC =", round(auc(roc_alasso), 3)),
-    paste("PheCAP, AUC =", round(auc(roc_phecap), 3))
-  )) + theme(legend.position = "bottom") +
-  ggtitle("The operating receiver characteristic (ROC) curve") + 
-  guides(color = guide_legend(ncol = 2, title = element_blank())) + 
-  labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)")
+plot_roc(list(roc_lasso, roc_alasso, roc_phecap), legend = c("LASSO", "ALASSO", "PheCAP"))
+```
+
+# Supervised learning (LASSO, ALASSO) vs. PheCAP at FPR = 0.10
+
+\tiny
+```{r}
+get_roc_parameter(0.1, roc_full_lasso)
+get_roc_parameter(0.1, roc_full_alasso)
+
+roc_full_phecap <- get_roc(y_true = test_y, y_score = y_hat_phecap) %>% data.frame()
+get_roc_parameter(0.1, roc_full_phecap)
 ```
 
 # Supervised learning vs. PheCAP for different training size
@@ -155,16 +154,7 @@ auc_phecap <- validate_phecap(dat = labeled_data,
 # Supervised learning vs. PheCAP for different training size
 
 ```{r, echo = FALSE}
-tidyr::gather(cbind(auc_supervised, auc_phecap)) %>%
-  mutate(
-    n = gsub(",.*$", "", key),
-    method = sub(".*,\\s*", "", key)
-  ) %>%
-  ggplot(aes(y = value, color = method)) +
-  geom_boxplot(outlier.shape = NA) +
-  facet_wrap(. ~ n) +
-  ggtitle("Area under the ROC curve (AUC) from 600 simulations") +
-  theme(legend.position = "bottom", axis.text.x = element_blank(), axis.ticks = element_blank())
+plot_sims(cbind(auc_supervised, auc_phecap), legend = c("LASSO", "ALASSO", "PheCAP"))
 ```
 
 ```{r, echo = FALSE, eval = FALSE}

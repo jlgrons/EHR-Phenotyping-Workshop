@@ -16,3 +16,11 @@ glmpath
 pROC
 ggpubr
 mclust
+randomForestSRC
+PheNorm
+lattice
+flexmix
+MAP
+mltools
+data.table
+corrplot
