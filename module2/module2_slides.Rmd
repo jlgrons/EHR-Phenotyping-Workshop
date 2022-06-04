@@ -167,14 +167,9 @@ ggroc(list(roc_lasso, roc_alasso), legacy.axes = TRUE) +
     paste("ALASSO, AUC =", round(auc(roc_alasso), 3))
   )) + theme(legend.position = "bottom") +
   ggtitle("The operating receiver characteristic (ROC) curve") + 
-  guides(color = guide_legend(title = element_blank()))
-
-## Please change ROC plots to TPR and FPR so it matches the output
-## Unify the format for all plots -titles, colors, axis, etc
-## Make legends bigger
-## Make axis and axis marks bigger - titles - everything so it easy to see
-## Use ggplot for all plots - use default colors
-## Jianhui uses . for separating words in variables, Siyue uses _ : pick one, I prefer _
+  guides(color = guide_legend(title = element_blank())) + 
+  labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)") +
+  theme(text = element_text(size = 15))
 ```
 
 # LASSO vs. ALASSO at FPR = 0.10
@@ -213,7 +208,8 @@ tidyr::gather(auc_supervised) %>%
   geom_boxplot(outlier.shape = NA) +
   facet_wrap(. ~ n) +
   ggtitle("Area under the ROC curve (AUC) from 600 simulations") +
-  theme(legend.position = "bottom", axis.text.x = element_blank(), axis.ticks = element_blank())
+  theme(legend.position = "bottom", axis.text.x = element_blank(), axis.ticks = element_blank())+
+  theme(text = element_text(size = 15))
 
 # Use ggplot
 # Remove outlier for box plot
@@ -249,5 +245,11 @@ ggroc(list(roc_lasso, roc_alasso, roc_rf, roc_svm), legacy.axes = TRUE) +
     paste("SVM, AUC =", round(auc(roc_svm), 3))
   )) + theme(legend.position = "bottom") +
   ggtitle("The operating receiver characteristic (ROC) curve") + 
-  guides(color = guide_legend(ncol = 2, title = element_blank()))
+  guides(color = guide_legend(ncol = 2, title = element_blank())) + 
+  labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)")+
+  theme(text = element_text(size = 15))
+```
+
+```{r, eval = F}
+save(list = ls(), file = "../module3/environment.RData")
 ```
