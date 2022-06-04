@@ -30,7 +30,7 @@ package.check <- lapply(
 )
 
 # load environment from example 1
-load("../module3/environment.RData")
+load("../module4/environment.RData")
 source("../Rscripts/helper_function.R")
 
 # format slides nicely please
@@ -38,14 +38,13 @@ source("../Rscripts/helper_function.R")
 
 
 # 2-step Semi-supervised Approach
-i) Regress the surrogate on the features with penalized least square to get 
+1. Regress the surrogate on the features with penalized least square to get 
 the direction of beta.
 
-\tiny
 
 ```{r}
-x <- log(ehr_data %>% select(starts_with("health") | starts_with("COD") |
-  starts_with("NLP")) + 1) # COD + NLP + HU
+x <- log(ehr_data %>% select(starts_with("health") | 
+  starts_with("COD") | starts_with("NLP")) + 1) # COD + NLP + HU
 S <- log(ehr_data$main_ICD + ehr_data$main_NLP + 1)
 
 # Step 1
@@ -55,16 +54,13 @@ beta_step1 <- adaptive_lasso_fit(
   family = "gaussian",
   tuning = "ic"
 )
-
-# Features selected
-names(beta_step1[abs(beta_step1) > 0])[-1]
 ```
 
 # 2-step Semi-supervised Approach
 
-i) Regress the surrogate on the features with penalized least square to get the direction of beta.
+1. Regress the surrogate on the features with penalized least square to get the direction of beta.
 
-ii) Regress the outcome on the linear predictor to get the intercept and multiplier for the beta.
+2. Regress the outcome on the linear predictor to get the intercept and multiplier for the beta.
 
 \tiny 
 
@@ -83,26 +79,25 @@ beta_step2
 beta <- beta_step2[2] * beta_step1
 ```
 
-# Compare betas
+# Compare selected features
 
 \tiny
 
 ```{r}
 # LASSO
-beta_lasso[!beta_lasso == 0][-1]
-# ALASSO
-beta_alasso[!beta_alasso == 0][-1]
+names(beta_lasso[!beta_lasso == 0])[-1]
 ```
-
-# Compare betas
-
-\tiny
-
+```{r}
+# ALASSO
+names(beta_alasso[!beta_alasso == 0])[-1]
+```
 ```{r}
 # PheCAP
-
-# 2 Step
-beta[!beta == 0][-1]
+feature_selected
+```
+```{r}
+# Two Step
+names(beta[!beta == 0])[-1]
 ```
 
 
@@ -122,11 +117,12 @@ roc_twostep <- roc(test_y, y_hat_twostep)
 
 # ROC
 ```{r, echo=FALSE}
-ggroc(list(roc_lasso, roc_alasso, roc_twostep), legacy.axes = TRUE) +
+ggroc(list(roc_lasso, roc_alasso, roc_twostep, roc_phecap), legacy.axes = TRUE) +
   scale_color_discrete(labels = c(
     paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
+    paste("Two-Step, AUC =", round(auc(roc_twostep), 3)),
     paste("ALASSO, AUC =", round(auc(roc_alasso), 3)),
-    paste("Two-Step, AUC =", round(auc(roc_twostep), 3))
+    paste("PheCAP, AUC =", round(auc(roc_phecap), 3))
   )) + theme(legend.position = "bottom") +
   ggtitle("The operating receiver characteristic (ROC) curve") +
   guides(color = guide_legend(ncol = 2, title = element_blank()))
@@ -134,7 +130,7 @@ ggroc(list(roc_lasso, roc_alasso, roc_twostep), legacy.axes = TRUE) +
 
 # Model Evaluation
 
-```{r,cache=TRUE}
+```{r,cache=TRUE, echo=FALSE}
 auc_twostep <- validate_ss(
   dat = labeled_data, nsim = 600,
   n.train = c(50, 70, 90),
@@ -146,7 +142,7 @@ auc_twostep <- validate_ss(
 
 
 ```{r, echo=FALSE}
-tidyr::gather(cbind(auc_supervised, auc_twostep)) %>%
+tidyr::gather(cbind(auc_supervised, auc_twostep, auc_phecap)) %>%
   mutate(
     n = gsub(",.*$", "", key),
     method = sub(".*,\\s*", "", key)
@@ -162,7 +158,10 @@ tidyr::gather(cbind(auc_supervised, auc_twostep)) %>%
 ```
 
 # MAP
-```{r}
+
+\tiny 
+
+```{r, message=FALSE}
 # Use untransformed data; MAP requires sparse matrix
 # Create sparse matrix for surroagtes
 data_fit <- sparsify(PheCAP::ehr_data %>%
@@ -179,7 +178,9 @@ y_hat_map <- model_map$scores[data$validation_set]
 roc_map <- roc(test_y, y_hat_map)
 ```
 
-```{r}
+# ROC
+
+```{r, echo=FALSE}
 ggroc(list(roc_lasso, roc_alasso, roc_twostep, roc_map), legacy.axes = TRUE) +
   scale_color_discrete(labels = c(
     paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
