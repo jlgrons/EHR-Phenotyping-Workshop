@@ -5,26 +5,21 @@ library(glmpath)
 ################### Plotting  ###################################
 #################################################################
 
-plot_roc <- function(rocs, legend = c("LASSO", "ALASSO")) {
-
+plot_roc <- function(rocs,legend, n_total_method = 7) {
+  
   label_text <- c()
   for (i in c(1:length(rocs))) {
     label_text <- c(label_text, paste0(legend[i], ", AUC=", round(auc(rocs[[i]]), 3)))
   }
-    
-  cols <- c("LASSO"="#F8766D", "ALASSO"="#7CAE00", "PheCAP"="#00BFC4", 
-            "Two-step"="#C77CFF", "MAP"="#CD9600", "SVM"="#00A9FF", 
-            "Random forest"="#00BE67", "ICD"="#FF64B0", "NLP"="#619CFF")
-    
+  
   ggroc(rocs, legacy.axes = TRUE) +
-    scale_colour_manual(values = cols, labels = label_text, limits = legend) +
-    theme(legend.position = "bottom") +
+    scale_colour_manual(values = scales::hue_pal()(n_total_method)[1:length(legend)], 
+                        labels = label_text) +
+    theme(legend.position = "bottom", text = element_text(size = 20)) +
     ggtitle("The operating receiver characteristic (ROC) curve") + 
     guides(color = guide_legend(title = element_blank())) + 
     labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)")
 }
-
-
 
 #################################################################
 ################### Model fitting methods #######################
