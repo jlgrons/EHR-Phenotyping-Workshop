@@ -1,163 +1,44 @@
-library(mclust)
 library(glmnet)
 library(glmpath)
 
 #################################################################
-################### Feature selection methods ###################
+################### Plotting  ###################################
 #################################################################
 
-# Absolute rank correlation method.
-# From the paper below:
-# Sheng Yu, Katherine P Liao, Stanley Y Shaw, Vivian S Gainer,
-# Susanne E Churchill, Peter Szolovits, Shawn N Murphy,
-# Isaac S. Kohane, Tianxi Cai,
-# Toward high-throughput phenotyping: unbiased automated feature
-# extraction and selection from knowledge sources, Journal of the
-# American Medical Informatics Association, Volume 22, Issue 5,
-# September 2015, Pages 993–1000.
-
-rankCor <- function(s, x, threshold = 0.15) {
-
-  # s: N x 1 surrogates
-  # x: N x p features
-  # threshold: an constant for significant correlation
-
-  rank_cor <- abs(cor(s, x, method = "spearman"))
-  ind <- which(rank_cor > threshold)
-  return(ind)
+plot_roc <- function(rocs, legend, n_total_method = 7) {
+  
+  label_text <- c()
+  for (i in c(1:length(rocs))) {
+    label_text <- c(label_text, paste0(legend[i], ", AUC=", round(auc(rocs[[i]]), 3)))
+  }
+  
+  ggroc(rocs, legacy.axes = TRUE) +
+    scale_colour_manual(values = scales::hue_pal()(n_total_method)[1:length(legend)], 
+                        labels = label_text) +
+    theme(legend.position = "bottom", text = element_text(size = 20)) +
+    ggtitle("The operating receiver characteristic (ROC) curve") + 
+    guides(color = guide_legend(title = element_blank())) + 
+    labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)")
 }
 
-# Extreme method.
-# From the paper below:
-# Yu, S., Chakrabortty, A., Liao, K. P., Cai, T.,
-# Ananthakrishnan, A. N., Gainer, V. S., Churchill,
-# S. E., Szolovits, P., Murphy, S. N., Kohane, I. S.,
-# & Cai, T. (2017). Surrogate-assisted feature extraction
-# for high-throughput phenotyping. Journal of the American
-# Medical Informatics Association : JAMIA, 24(e1), e143–e149.
+plot_sims <- function(data, legend, n_total_method = 7) {
+  
+  plot_data <- tidyr::gather(data) %>%
+    mutate(
+      n = gsub(",.*$", "", key),
+      method = sub(".*,\\s*", "", key)
+    ) 
+  
+  plot_data$method <- factor(plot_data$method, levels = c("LASSO", "ALASSO", "PheCAP", "Two-step"))
 
-extreme_method <- function(s, x, n_subset = 400, p_subset = 1, reps = 200,
-                           u_bound = NULL, l_bound = NULL, q = 0.025) {
-
-  # If only have 1 surrogate
-  if (is.vector(s)) {
-    s_label <- get_silver_label(s, u_bound, l_bound, q)
-    # If have more than 1 surrogate
-  } else {
-    s_silver <- c()
-    for (i in c(1:ncol(s))) {
-      s_tmp <- get_silver_label(s[, i], u_bound[i], l_bound[i], q)
-      s_silver <- cbind(s_silver, s_tmp)
-    }
-    s_silver <- rowMeans(s_silver)
-    s_label <- rep(0.5, length(s_silver))
-    s_label[s_silver < 0.5] <- 0
-    s_label[s_silver > 0.5] <- 1
-  }
-
-  ind1 <- which(s_label == 1)
-  ind0 <- which(s_label == 0)
-
-  n1_subset <- floor(length(ind1) * p_subset)
-  n0_subset <- floor(length(ind0) * p_subset)
-  n_subset <- min(n1_subset, n0_subset, n_subset)
-
-  # Weights for Adaptive lasso
-  w <- rep(1, 2 * n_subset)
-  p <- ncol(x)
-  lambda_init <- p / (2 * n_subset)
-
-  beta <- c()
-  for (i in c(1:reps)) {
-    ind <- c(sample(ind1, n_subset), sample(ind0, n_subset))
-    beta_tmp <- fit_alasso_bic(s_label[ind], x[ind, ],
-      family = "binomial", x_standardize = F
-    )$beta_hat
-    beta_tmp <- beta_tmp[-1] # drop intercept
-    beta_tmp <- as.integer(beta_tmp != 0)
-    beta <- rbind(beta, beta_tmp)
-  }
-
-  beta_select <- which(colMeans(beta, na.rm = T) >= 0.5)
-
-  return(list(beta_select = beta_select, beta_all = beta))
-}
-
-# Function to generate silver standard label.
-get_silver_label <- function(s, u_bound, l_bound, q) {
-
-  # s: N x 1 surrogates
-  # u_bound: upper bound
-  # l_bound: lower bound
-  # q: quantile of s to get extreme surrogates
-
-  if (is.null(u_bound)) {
-    u_bound <- quantile(s, 1 - q)
-  }
-
-  if (is.null(l_bound)) {
-    l_bound <- quantile(s, q)
-  }
-
-  s_silver <- rep(0.5, length(s))
-  s_silver[s <= l_bound] <- 0
-  s_silver[s >= u_bound] <- 1
-
-  return(s_silver)
-}
-
-clustering_method <- function(s, x, mclust_model = NULL) {
-  s <- as.matrix(s)
-  N <- nrow(s)
-  tmpind <- 1:N
-
-  # get pi_S via clustering or just use S if univariate/non-binary
-  if (ncol(s) > 1) {
-    mclustfit <- Mclust(s, G = 2, modelNames = mclust_model)
-    pi_s <- ProbD.S(s, par = mclustfit$par)
-    beta <- fit_alasso_approx(pi_s, x, family = "gaussian")
-  } else {
-    pi_s <- s[, 1]
-    beta <- fit_alasso_bic(pi_s, x, family = "gaussian")$beta_hat
-  }
-
-  beta <- beta[-1]
-  beta_select <- which(beta != 0)
-
-  return(list(beta_select = beta_select, beta = beta, cluster_model = mclustfit))
-}
-
-# Computes probabilities after clustering
-ProbD.S <- function(Si, par) {
-  par.list <- list(
-    pro = par$pro, mu = matrix(par$mean, ncol = 2),
-    var = list(1, 1)
-  )
-  Si <- as.matrix(Si)
-  k1 <- which.max(apply(par.list$mu, 2, mean))
-  k0 <- setdiff(1:2, k1)
-  if (ncol(Si) == 1) {
-    sig2 <- par$variance$sigmasq
-    if (length(sig2) == 1) {
-      sig2 <- rep(sig2, 2)
-    }
-    par.list$var <- as.list(sig2)
-  } else {
-    for (kk in 1:2) {
-      par.list$var[[kk]] <- par$variance$sigma[, , kk]
-    }
-  }
-  tmp1 <- dmvnorm(Si,
-    mean = par.list$mu[, k1],
-    sigma = as.matrix(par.list$var[[k1]])
-  ) *
-    par$pro[k1]
-  tmp0 <- dmvnorm(Si,
-    mean = par.list$mu[, k0],
-    sigma = as.matrix(par.list$var[[k0]])
-  ) *
-    par$pro[k0]
-  tmp1 / (tmp1 + tmp0)
+  plot_data %>%
+    ggplot(aes(y = value, color = method)) +
+    scale_colour_manual(values = scales::hue_pal()(n_total_method)[1:length(legend)]) +
+    geom_boxplot(outlier.shape = NA) +
+    facet_wrap(. ~ n) +
+    ggtitle("Area under the ROC curve (AUC) from 600 simulations") +
+    theme(text = element_text(size = 20)) +
+    theme(legend.position = "bottom", axis.text.x = element_blank(), axis.ticks = element_blank())
 }
 
 #################################################################
@@ -777,7 +658,24 @@ twostep_pred <- function(train_data, test_data, X, S, beta.step1) {
   y_hat.ss <- plogis(mu)
 }
 
-validate_phecap <- function(dat, selected_features, nsim, n.train = c(50, 70, 90)) {
+validate_phecap <- function(dat, orig_data, surrogates, feature_selected, nsim, n.train = c(50, 70, 90)) {
+  
+  surrogate_matrix <- sapply(surrogates, function(surrogate) {
+    rowSums(orig_data[, surrogate$variable_names, drop = FALSE])
+  })
+  
+  colnames(surrogate_matrix) <- sapply(surrogates, function(surrogate) {
+    paste0(surrogate$variable_names, collapse = "&")
+  })
+  
+  # Orthogonalize.
+  other_features <- as.matrix(orig_data[, setdiff(feature_selected$selected, c(colnames(surrogate_matrix), "healthcare_utilization")), drop = FALSE])
+  other_features <- qr.resid(qr(cbind(1.0, surrogate_matrix, orig_data$healthcare_utilization)), other_features)
+  orig_data <- data.frame(label = orig_data$label, 
+                          surrogate_matrix, 
+                          healthcare_utilization = orig_data$healthcare_utilization, 
+                          other_features)
+  
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234 + n)
     id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
@@ -787,16 +685,16 @@ validate_phecap <- function(dat, selected_features, nsim, n.train = c(50, 70, 90
 
     phecap <- sapply(1:3, function(i) {
       auc_roc(
-        actuals = ehr_data[id.y[[i]], ]$label,
+        actuals = orig_data[id.y[[i]], ]$label,
         preds = linear_model_predict(
-          beta =
-            adaptive_lasso_fit(
-              x = ehr_data[id.x[[i]], selected_features],
-              y = ehr_data[id.x[[i]], ]$label,
+            beta =
+            lasso_fit(
+              x = orig_data[id.x[[i]], 2:ncol(orig_data)],
+              y = orig_data[id.x[[i]], ]$label,
               family = "binomial",
               tuning = "cv"
             ),
-          x = as.matrix(ehr_data[id.y[[i]], selected_features]),
+          x = as.matrix(orig_data[id.y[[i]], 2:ncol(orig_data)]),
           probability = TRUE
         )
       )
