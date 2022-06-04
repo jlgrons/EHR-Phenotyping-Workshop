@@ -5,7 +5,7 @@ library(glmpath)
 ################### Plotting  ###################################
 #################################################################
 
-plot_roc <- function(rocs, legend, n_total_method = 7) {
+plot_roc <- function(rocs, legend, n_total_method = 7, method_index) {
   
   label_text <- c()
   for (i in c(1:length(rocs))) {
@@ -13,15 +13,15 @@ plot_roc <- function(rocs, legend, n_total_method = 7) {
   }
   
   ggroc(rocs, legacy.axes = TRUE) +
-    scale_colour_manual(values = scales::hue_pal()(n_total_method)[1:length(legend)], 
+    scale_colour_manual(values = scales::hue_pal()(n_total_method)[method_index], 
                         labels = label_text) +
     theme(legend.position = "bottom", text = element_text(size = 20)) +
     ggtitle("The operating receiver characteristic (ROC) curve") + 
-    guides(color = guide_legend(title = element_blank())) + 
+    guides(color = guide_legend(title = element_blank(), ncol = 2)) + 
     labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)")
 }
 
-plot_sims <- function(data, legend, n_total_method = 7) {
+plot_sims <- function(data, legend, n_total_method = 7, method_index) {
   
   plot_data <- tidyr::gather(data) %>%
     mutate(
@@ -33,7 +33,7 @@ plot_sims <- function(data, legend, n_total_method = 7) {
 
   plot_data %>%
     ggplot(aes(y = value, color = method)) +
-    scale_colour_manual(values = scales::hue_pal()(n_total_method)[1:length(legend)]) +
+    scale_colour_manual(values = scales::hue_pal()(n_total_method)[method_index]) +
     geom_boxplot(outlier.shape = NA) +
     facet_wrap(. ~ n) +
     ggtitle("Area under the ROC curve (AUC) from 600 simulations") +
