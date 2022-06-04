@@ -43,8 +43,9 @@ the direction of beta.
 
 
 ```{r}
+# COD + NLP + HU
 x <- log(ehr_data %>% select(starts_with("health") | 
-  starts_with("COD") | starts_with("NLP")) + 1) # COD + NLP + HU
+  starts_with("COD") | starts_with("NLP")) + 1) 
 S <- log(ehr_data$main_ICD + ehr_data$main_NLP + 1)
 
 # Step 1
