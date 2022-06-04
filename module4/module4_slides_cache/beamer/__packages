@@ -1,0 +1,17 @@
+base
+dplyr
+PheCAP
+Matrix
+glmnet
+randomForestSRC
+PheNorm
+lattice
+flexmix
+MAP
+pROC
+mltools
+data.table
+ggplot2
+mclust
+survival
+glmpath
