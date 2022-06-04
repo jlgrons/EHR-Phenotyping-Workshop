@@ -161,15 +161,8 @@ roc_alasso <- roc(test_y, y_hat_alasso)
 # LASSO vs. ALASSO
 
 ```{r, echo = FALSE}
-ggroc(list(roc_lasso, roc_alasso), legacy.axes = TRUE) +
-  scale_color_discrete(labels = c(
-    paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
-    paste("ALASSO, AUC =", round(auc(roc_alasso), 3))
-  )) + theme(legend.position = "bottom") +
-  ggtitle("The operating receiver characteristic (ROC) curve") + 
-  guides(color = guide_legend(title = element_blank())) + 
-  labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)") +
-  theme(text = element_text(size = 15))
+plot_roc(list(roc_lasso, roc_alasso), legend = c("LASSO", "ALASSO"),
+         method_index = c(1,2))
 ```
 
 # LASSO vs. ALASSO at FPR = 0.10
@@ -199,20 +192,7 @@ auc_supervised <- validate_supervised(
 # LASSO vs. ALASSO with different training set size
 
 ```{r, echo = FALSE}
-tidyr::gather(auc_supervised) %>%
-  mutate(
-    n = gsub(",.*$", "", key),
-    method = sub(".*,\\s*", "", key)
-  ) %>%
-  ggplot(aes(y = value, color = method)) +
-  geom_boxplot(outlier.shape = NA) +
-  facet_wrap(. ~ n) +
-  ggtitle("Area under the ROC curve (AUC) from 600 simulations") +
-  theme(legend.position = "bottom", axis.text.x = element_blank(), axis.ticks = element_blank())+
-  theme(text = element_text(size = 15))
-
-# Use ggplot
-# Remove outlier for box plot
+plot_sims(auc_supervised, legend = c("LASSO", "ALASSO"), method_index = c(1,2))
 ```
 
 # Random Forest and SVM
@@ -237,19 +217,11 @@ roc_svm <- roc(test_y, y_hat_svm)
 # ROC curves
 
 ```{r, echo = FALSE}
-ggroc(list(roc_lasso, roc_alasso, roc_rf, roc_svm), legacy.axes = TRUE) +
-  scale_color_discrete(labels = c(
-    paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
-    paste("Random Forest, AUC =", round(auc(roc_rf), 3)),
-    paste("ALASSO, AUC =", round(auc(roc_alasso), 3)),
-    paste("SVM, AUC =", round(auc(roc_svm), 3))
-  )) + theme(legend.position = "bottom") +
-  ggtitle("The operating receiver characteristic (ROC) curve") + 
-  guides(color = guide_legend(ncol = 2, title = element_blank())) + 
-  labs(x = "False positive rate (FPR)", y = "True positive rate (TPR)")+
-  theme(text = element_text(size = 15))
+plot_roc(list(roc_lasso, roc_alasso, roc_rf, roc_svm), 
+         legend = c("LASSO", "ALASSO", "Random Forest", "SVM"),
+         method_index = c(1,2,3,4))
 ```
 
-```{r, eval = F}
+```{r, eval = F, include=FALSE}
 save(list = ls(), file = "../module3/environment.RData")
 ```
