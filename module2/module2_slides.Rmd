@@ -248,5 +248,5 @@ ggroc(list(roc_lasso, roc_alasso, roc_rf, roc_svm), legacy.axes = TRUE) +
     paste("SVM, AUC =", round(auc(roc_svm), 3))
   )) + theme(legend.position = "bottom") +
   ggtitle("The operating receiver characteristic (ROC) curve") + 
-  guides(color = guide_legend(ncol =2))
+  guides(color = guide_legend(ncol = 2))
 ```
