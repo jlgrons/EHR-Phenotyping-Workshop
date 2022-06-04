@@ -14,7 +14,7 @@ This data mart is a random sample of patients in the Mass General Brigham (forme
 - $\geq$ 1 ICD9 code related to CAD (410.x, 411.x, 412.x, 413.x, 414.x). 
 - $\ge$ 1 mention for any CAD related concepts (eg. CAD, CAD procedures, CAD biomarkers, positive stress test).
 
-```{r, echo = F}
+```{r, echo=F}
 # Packages required for this module.
 packages <- c("tidyverse", "PheCAP", "corrplot", "ggplot2")
 
@@ -30,8 +30,7 @@ package.check <- lapply(
 	)
 ```
 
-
-```{r, echo = F}
+```{r, echo=F}
 # Load helper functions.
 source("../Rscripts/helper_function.R")
 ```
@@ -43,7 +42,10 @@ source("../Rscripts/helper_function.R")
 \tiny
 ```{r}
 data(ehr_data)
-data <- PhecapData(ehr_data, "healthcare_utilization", "label", 75, patient_id = "patient_id", seed = 123)
+data <- PhecapData(
+  ehr_data, "healthcare_utilization", "label", 75, 
+  patient_id = "patient_id", seed = 123
+)
 data
 ```
 
@@ -91,7 +93,7 @@ mean(ehr_data$label, na.rm = TRUE)
 
 # Feature distributions
 
-```{r echo = FALSE}
+```{r echo=FALSE}
 set.seed(99)
 feature_index <- sample(c(3:ncol(ehr_data)), 10, replace = FALSE)
 ehr_data[, feature_index] %>%
@@ -106,7 +108,7 @@ ehr_data[, feature_index] %>%
 
 - We log transform all the features as they are highly skewed
 
-- We orthogonalize all features against health care utilization before fitting as patients with higher healthcare utilization have higher feature counts 
+- We orthogonalize all features against health care utilization before fitting as patients with higher healthcare utilization have higher feature counts (in Module 3)
 
 (Please find more details in the `.Rmd` file.)
 
@@ -117,9 +119,11 @@ features <- log(features + 1)
 
 # Save the transformed features. 
 # Please note that in the beginning of module 2, the transformation is also performed.
-ehr_data_transformed <- cbind(patient_id = ehr_data$patient_id,
-                              label = ehr_data$label, 
-                              healthcare_utilization =features$healthcare_utilization, 
-                              features) 
+ehr_data_transformed <- cbind(
+  patient_id = ehr_data$patient_id,
+  label = ehr_data$label, 
+  healthcare_utilization =features$healthcare_utilization, 
+  features
+) 
 ```
 

@@ -375,10 +375,10 @@ linear_model_predict <- function(beta, x, probability = FALSE) {
   y
 }
 
-validate_supervised <- function(dat, nsim, n.train = c(50, 70, 90)) {
+validate_supervised <- function(dat, nsim, ntrain = c(50, 70, 90)) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234 + n)
-    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.x <- lapply(ntrain, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
@@ -446,10 +446,10 @@ twostep_pred <- function(train_data, test_data, X, S, beta.step1) {
   y_hat.ss <- plogis(mu)
 }
 
-validate_phecap <- function(dat, orig_data, surrogates, feature_selected, nsim, n.train = c(50, 70, 90)) {
+validate_phecap <- function(dat, surrogates, feature_selected, nsim, ntrain = c(50, 70, 90)) {
   
   surrogate_matrix <- sapply(surrogates, function(surrogate) {
-    rowSums(orig_data[, surrogate$variable_names, drop = FALSE])
+    rowSums(PheCAP::ehr_data[, surrogate$variable_names, drop = FALSE])
   })
   
   colnames(surrogate_matrix) <- sapply(surrogates, function(surrogate) {
@@ -457,32 +457,34 @@ validate_phecap <- function(dat, orig_data, surrogates, feature_selected, nsim, 
   })
   
   # Orthogonalize.
-  other_features <- as.matrix(orig_data[, setdiff(feature_selected$selected, c(colnames(surrogate_matrix), "healthcare_utilization")), drop = FALSE])
-  other_features <- qr.resid(qr(cbind(1.0, surrogate_matrix, orig_data$healthcare_utilization)), other_features)
-  orig_data <- data.frame(label = orig_data$label, 
+  label <- PheCAP::ehr_data$label
+  healthcare <- PheCAP::ehr_data$healthcare_utilization
+  other_features <- as.matrix(PheCAP::ehr_data[, setdiff(feature_selected$selected, c(colnames(surrogate_matrix))), drop = FALSE])
+  other_features <- qr.resid(qr(cbind(1.0, surrogate_matrix, healthcare)), other_features)
+  data_transformed <- data.frame(label = label, 
                           surrogate_matrix, 
-                          healthcare_utilization = orig_data$healthcare_utilization, 
+                          healthcare_utilization = healthcare, 
                           other_features)
   
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234 + n)
-    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.x <- lapply(ntrain, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
 
     phecap <- sapply(1:3, function(i) {
-      auc_roc(
-        actuals = orig_data[id.y[[i]], ]$label,
+      mltools::auc_roc(
+        actuals = label[id.y[[i]]],
         preds = linear_model_predict(
             beta =
             lasso_fit(
-              x = orig_data[id.x[[i]], 2:ncol(orig_data)],
-              y = orig_data[id.x[[i]], ]$label,
+              x = data_transformed[id.x[[i]], 2:ncol(data_transformed)],
+              y = label[id.x[[i]]],
               family = "binomial",
               tuning = "cv"
             ),
-          x = as.matrix(orig_data[id.y[[i]], 2:ncol(orig_data)]),
+          x = as.matrix(data_transformed[id.y[[i]], 2:ncol(data_transformed)]),
           probability = TRUE
         )
       )
@@ -499,10 +501,10 @@ validate_phecap <- function(dat, orig_data, surrogates, feature_selected, nsim, 
   return(temp)
 }
 
-validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
+validate_ss <- function(dat, nsim, ntrain = c(50, 70, 90), beta, x, S) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234 + n)
-    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.x <- lapply(ntrain, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
@@ -529,10 +531,10 @@ validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
 }
 
 
-validate_svmandrf <- function(dat, nsim, n.train = c(50, 70, 90)) {
+validate_svmandrf <- function(dat, nsim, ntrain = c(50, 70, 90)) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234 + n)
-    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.x <- lapply(ntrain, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })

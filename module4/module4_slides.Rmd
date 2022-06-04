@@ -12,13 +12,13 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ## are not, the missing package(s) will be installed
 ## from CRAN and then loaded.
 
-## First specify the packages of interest
+## First specify the packages of interest.
 packages <- c(
   "dplyr", "PheCAP", "glmnet", "randomForestSRC", "PheNorm",
   "MAP", "pROC", "mltools", "data.table", "ggplot2", "parallel"
 )
 
-## Now load or install&load all
+## Now load or install&load all.
 package.check <- lapply(
   packages,
   FUN = function(x) {
@@ -29,31 +29,28 @@ package.check <- lapply(
   }
 )
 
-# load environment from example 1
+# Load environment from example 1.
 load("../module4/environment.RData")
 source("../Rscripts/helper_function.R")
-
-# format slides nicely please
 ```
 
-
 # 2-step Semi-supervised Approach
+
 1. Regress the surrogate on the features with penalized least square to get 
 the direction of beta.
 
-
 ```{r}
-# COD + NLP + HU
+# COD + NLP + HU.
 x <- log(ehr_data %>% select(starts_with("health") | 
   starts_with("COD") | starts_with("NLP")) + 1) 
 S <- log(ehr_data$main_ICD + ehr_data$main_NLP + 1)
 
-# Step 1
+# Step 1.
 beta_step1 <- adaptive_lasso_fit(
   y = S[], # surrogate
   x = x[], # all X
   family = "gaussian",
-  tuning = "ic"
+  tuning = "cv"
 )
 ```
 
@@ -64,71 +61,75 @@ beta_step1 <- adaptive_lasso_fit(
 2. Regress the outcome on the linear predictor to get the intercept and multiplier for the beta.
 
 \tiny 
-
 ```{r}
-# linear predictor without intercept
+# Linear predictor without intercept.
 bhatx <- linear_model_predict(beta = beta_step1, x = as.matrix(x))
 
-# Step 2
-step2 <- glm(train_y ~ bhatx[train_data$patient_id] + S[train_data$patient_id],
+# Step 2.
+step2 <- glm(
+  train_y ~ bhatx[train_data$patient_id] + S[train_data$patient_id],
   family = "binomial"
 )
 beta_step2 <- coef(step2)
 beta_step2
 
-# recover beta
+# Recover beta.
 beta <- beta_step2[2] * beta_step1
 ```
 
 # Compare selected features
 
 \tiny
-
 ```{r}
-# LASSO
+# LASSO.
 names(beta_lasso[!beta_lasso == 0])[-1]
 ```
+
 ```{r}
-# ALASSO
+# ALASSO.
 names(beta_alasso[!beta_alasso == 0])[-1]
 ```
+
 ```{r}
-# PheCAP
+# PheCAP.
 feature_selected
 ```
+
 ```{r}
-# Two Step
+# Two Step.
 names(beta[!beta == 0])[-1]
 ```
-
 
 # ROC
 
 ```{r}
-# mu
 mu <- beta_step2[1] +
   as.numeric(as.matrix(x[test_data$patient_id, ])
   %*% beta[-1]) +
   as.numeric(beta_step2[3] %*% S[test_data$patient_id])
-# expit
+
+# Expit.
 y_hat_twostep <- plogis(mu)
 
 roc_twostep <- roc(test_y, y_hat_twostep)
 ```
 
 # ROC
+
 ```{r, echo=FALSE}
-plot_roc(list(roc_lasso, roc_alasso, roc_phecap, roc_twostep),
-         legend = c("LASSO", "ALASSO", "PheCAP", "Two-step"),
-         method_index = c(1,2,5,6))
+plot_roc(
+  list(roc_lasso, roc_alasso, roc_phecap, roc_twostep),
+  legend = c("LASSO", "ALASSO", "PheCAP", "Two-step"),
+  method_index = c(1,2,5,6)
+)
 ```
 
 # Model Evaluation
 
-```{r,cache=TRUE, echo=FALSE}
+```{r, cache=TRUE, echo=FALSE}
 auc_twostep <- validate_ss(
   dat = labeled_data, nsim = 600,
-  n.train = c(50, 70, 90),
+  ntrain = c(50, 70, 90),
   beta = beta_step1,
   S = S,
   x = x
@@ -137,24 +138,28 @@ auc_twostep <- validate_ss(
 
 
 ```{r, echo=FALSE}
-plot_sims(cbind(auc_supervised, auc_phecap, auc_twostep),
-          legend = c("LASSO", "ALASSO", "PheCAP", "Two-step"),
-          method_index = c(1,2,5,6))
+plot_sims(
+  cbind(auc_supervised, auc_phecap, auc_twostep),
+  legend = c("LASSO", "ALASSO", "PheCAP", "Two-step"),
+  method_index = c(1,2,5,6)
+)
 ```
 
 # MAP
 
 \tiny 
-
 ```{r, message=FALSE}
-# Use untransformed data; MAP requires sparse matrix
-# Create sparse matrix for surroagtes
-data_fit <- sparsify(PheCAP::ehr_data %>%
+# Use un-transformed data; MAP requires sparse matrix.
+# Create sparse matrix for surrogates.
+data_fit <- sparsify(
+  PheCAP::ehr_data %>%
   select(main_ICD, main_NLP) %>%
-  rename(ICD = main_ICD) %>% data.table())
+  rename(ICD = main_ICD) %>% data.table()
+)
 
-# Create sparse matrix for HU
-note <- Matrix(PheCAP::ehr_data$healthcare_utilization,
+# Create sparse matrix for HU.
+note <- Matrix(
+  PheCAP::ehr_data$healthcare_utilization,
   ncol = 1, sparse = TRUE
 )
 model_map <- MAP(mat = data_fit, note = note, full.output = TRUE)
@@ -166,7 +171,9 @@ roc_map <- roc(test_y, y_hat_map)
 # ROC
 
 ```{r, echo=FALSE}
-plot_roc(list(roc_lasso, roc_alasso, roc_phecap, roc_twostep, roc_map),
-         legend = c("LASSO", "ALASSO", "PheCAP", "Two-step", "MAP"),
-         method_index = c(1,2,5,6,7))
+plot_roc(
+  list(roc_lasso, roc_alasso, roc_phecap, roc_twostep, roc_map),
+  legend = c("LASSO", "ALASSO", "PheCAP", "Two-step", "MAP"),
+  method_index = c(1,2,5,6,7)
+)
 ```

@@ -3,7 +3,7 @@ title: "Module 3: Semi-supervised learning (PheCAP)"
 output: beamer_presentation
 ---
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
@@ -13,8 +13,8 @@ packages <- c("tidyverse", "PheCAP", "glmnet", "glmpath",
               "pROC", "parallel", "ggpubr")
 
 # Check if the packages are missing or not. 
-# If missing, install automatically.
-# If not missing, load the package.
+## If missing, install automatically.
+## If not missing, load the package.
 package.check <- lapply(
 	  packages,
 	  FUN = function(x) {
@@ -36,7 +36,7 @@ load("../module3/environment.RData")
 
 # Surrogates for CAD
 
-```{r, include = FALSE}
+```{r, include=FALSE}
 icd <- ehr_data %>%
   filter(!is.na(label)) %>%
   mutate(disease = factor(label)) %>%
@@ -51,7 +51,7 @@ nlp <- ehr_data %>%
   ggplot(aes(x = log(main_NLP + 1))) +
   geom_density(aes(color = disease)) +
   theme(text = element_text(size = 15)) +
-  ggtitle("Density plot of the main NLP codes")
+  ggtitle("Density plot of the main NLP concepts")
 ```
 
 ```{r, fig.height=4, echo=FALSE}
@@ -64,7 +64,7 @@ The more the disease-related codes and NLP mentions, the more **likely** the pat
 # ROC Surrogates
 
 \tiny
-```{r, warning=FALSE, include = FALSE}
+```{r, warning=FALSE, include=FALSE}
 nonmissing_index <- which(!is.na(ehr_data$label))
 y <- ehr_data$label[nonmissing_index]
 sicd <- ehr_data$main_ICD[nonmissing_index]
@@ -78,7 +78,10 @@ x <- data.matrix(ehr_data %>% select(starts_with("COD") | starts_with("NLP")))
 ```
 
 ```{r, echo=FALSE}
-plot_roc(list(roc_icd, roc_nlp), legend = c("ICD", "NLP"))
+plot_roc(
+  list(roc_icd, roc_nlp), 
+  legend = c("ICD", "NLP")
+)
 ```
 
 # Step 1: SAFE 
@@ -91,7 +94,8 @@ surrogates <- list(
     lower_cutoff = 1, upper_cutoff = 10),
   PhecapSurrogate(
     variable_names = "main_NLP",
-    lower_cutoff = 1, upper_cutoff = 10))
+    lower_cutoff = 1, upper_cutoff = 10)
+  )
 
 feature_selected <- phecap_run_feature_extraction(data, surrogates)
 feature_selected
@@ -101,8 +105,10 @@ feature_selected
 
 \tiny
 ```{r}
-phecap_lasso <- phecap_train_phenotyping_model(data, surrogates, feature_selected,
-                                        method = "lasso_cv")
+phecap_lasso <- phecap_train_phenotyping_model(
+  data, surrogates, feature_selected,
+  method = "lasso_cv"
+)
 ```
 
 \tiny
@@ -117,13 +123,14 @@ y_hat_phecap <- phenotype[test_data$patient_id, "prediction"]
 roc_phecap <- roc(test_y, y_hat_phecap)
 ```
 
-
 # Supervised learning (LASSO, ALASSO) vs. PheCAP 
 
-```{r, echo = FALSE}
-plot_roc(list(roc_lasso, roc_alasso, roc_phecap), 
-         legend = c("LASSO", "ALASSO", "PheCAP"),
-         method_index = c(1,2,5))
+```{r, echo=FALSE}
+plot_roc(
+  list(roc_lasso, roc_alasso, roc_phecap), 
+  legend = c("LASSO", "ALASSO", "PheCAP"),
+  method_index = c(1,2,5)
+)
 ```
 
 # Supervised learning (LASSO, ALASSO) vs. PheCAP at FPR = 0.10
@@ -145,24 +152,26 @@ get_roc_parameter(0.1, roc_full_phecap)
 
 \tiny
 ```{r, cache=TRUE}
-auc_phecap <- validate_phecap(dat = labeled_data, 
-                              orig_data = ehr_data,
-                              surrogates = surrogates,
-                              feature_selected = feature_selected,
-                              nsim = 600,
-                              n.train = c(50, 70, 90))
+auc_phecap <- validate_phecap(
+  dat = labeled_data, 
+  surrogates = surrogates,
+  feature_selected = feature_selected,
+  nsim = 600,
+  ntrain = c(50, 70, 90)
+)
 ```
 
 # Supervised learning vs. PheCAP for different training size
 
-```{r, echo = FALSE}
-plot_sims(cbind(auc_supervised, auc_phecap), 
-          legend = c("LASSO", "ALASSO", "PheCAP"),
-          method_index = c(1,2,5))
+```{r, echo=FALSE}
+plot_sims(
+  cbind(auc_supervised, auc_phecap), 
+  legend = c("LASSO", "ALASSO", "PheCAP"),
+  method_index = c(1,2,5)
+)
 ```
 
-```{r, echo = FALSE, eval = FALSE}
+```{r, echo=FALSE, eval=TRUE}
 save(list = ls(), file = "../module4/environment.RData")
-rmarkdown::render("module3_slides.Rmd")
 ```
 

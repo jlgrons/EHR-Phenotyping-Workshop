@@ -3,9 +3,9 @@ title: "Module 2: Supervised learning"
 output: beamer_presentation
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
 # Load helper functions.
 source("../Rscripts/helper_function.R")
 ```
@@ -15,13 +15,13 @@ source("../Rscripts/helper_function.R")
 ## are not, the missing package(s) will be installed
 ## from CRAN and then loaded.
 
-## First specify the packages of interest
+## First specify the packages of interest.
 packages <- c(
   "dplyr", "PheCAP", "glmnet", "randomForestSRC", "PheNorm",
   "MAP", "pROC", "mltools", "data.table", "ggplot2", "parallel"
 )
 
-## Now load or install&load all
+## Now load or install&load all.
 package.check <- lapply(
   packages,
   FUN = function(x) {
@@ -33,49 +33,37 @@ package.check <- lapply(
 )
 ```
 
-
-```{r include=FALSE}
+```{r, include=FALSE}
 data(ehr_data)
-data <- PhecapData(PheCAP::ehr_data, "healthcare_utilization", "label", 75,
+data <- PhecapData(
+  PheCAP::ehr_data, "healthcare_utilization", "label", 75,
   patient_id = "patient_id", seed = 123
 )
 
-# Data with non-missing labels
+# Data with non-missing labels.
 labeled_data <- ehr_data %>% dplyr::filter(!is.na(label))
 
-
-# All Features
+# All features.
 all_x <- ehr_data %>% dplyr::select(
   starts_with("COD"), starts_with("NLP"),
   starts_with("main"), healthcare_utilization
-)
+  )
 health_count <- ehr_data$healthcare_utilization
 
-# Training Set
+# Training set.
 train_data <- ehr_data %>% dplyr::filter(patient_id %in% data$training_set)
 train_x <- train_data %>%
-  dplyr::select(
-    starts_with("COD"), starts_with("NLP"),
-    starts_with("main"), healthcare_utilization
-  ) %>%
-  as.matrix()
-train_y <- train_data %>%
-  dplyr::select(label) %>%
-  pull()
+  dplyr::select(starts_with("COD"), starts_with("NLP"),
+                starts_with("main"), healthcare_utilization) %>% as.matrix()
+train_y <- train_data %>% dplyr::select(label) %>% pull()
 
-# Testing Set
+# Testing set.
 test_data <- ehr_data %>% dplyr::filter(patient_id %in% data$validation_set)
 test_x <- test_data %>%
-  dplyr::select(
-    starts_with("COD"), starts_with("NLP"),
-    starts_with("main"), healthcare_utilization
-  ) %>%
-  as.matrix()
-test_y <- test_data %>%
-  dplyr::select(label) %>%
-  pull()
+  dplyr::select(starts_with("COD"), starts_with("NLP"),
+                starts_with("main"), healthcare_utilization) %>% as.matrix()
+test_y <- test_data %>% dplyr::select(label) %>% pull()
 ```
-
 
 # Split data into train and test 
 
@@ -86,7 +74,6 @@ dim(train_x)
 ```{r}
 length(train_y)
 ```
-
 
 ```{r}
 dim(test_x)
@@ -99,54 +86,60 @@ length(test_y)
 # LASSO logistic regression
 
 ```{r}
-# Choose best lambda using CV
+# Choose best lambda using CV.
 beta_lasso <- lasso_fit(
-  x = log(train_x + 1), y = train_y,
-  tuning = "cv", family = "binomial"
+  x = log(train_x + 1), 
+  y = train_y, 
+  tuning = "cv", 
+  family = "binomial"
 )
 ```
 
 \tiny
 ```{r}
-# Features Selected
+# Features Selected.
 names(beta_lasso[abs(beta_lasso) > 0])[-1]
 ```
 
 # ALASSO logistic regression
+
 \tiny
 ```{r}
-# Fit Adaptive LASSO
+# Fit Adaptive LASSO.
 beta_alasso <- adaptive_lasso_fit(
-  x = log(train_x + 1), y = train_y,
-  tuning = "cv", family = "binomial"
+  x = log(train_x + 1), 
+  y = train_y, 
+  tuning = "cv", 
+  family = "binomial"
 )
 ```
 
-
 ```{r}
-# ALASSO features selected 
+# ALASSO features selected. 
 beta_alasso[!beta_alasso == 0][-1]
 ```
 
 ```{r}
-# LASSO features selected
-beta_lasso[!beta_lasso==0][-1]
+# LASSO features selected.
+beta_lasso[!beta_lasso == 0][-1]
 ```
 
 # Get model predictions + ROC curve
 
 ```{r}
-# Prediction on testing set (LASSO)
+# Prediction on testing set (LASSO).
 y_hat_lasso <- linear_model_predict(
-  beta = beta_lasso, x = log(test_x + 1),
+  beta = beta_lasso, 
+  x = log(test_x + 1), 
   probability = TRUE
 )
 ```
 
 ```{r}
-# Prediction on testing set (ALASSO)
+# Prediction on testing set (ALASSO).
 y_hat_alasso <- linear_model_predict(
-  beta = beta_alasso, x = log(test_x + 1),
+  beta = beta_alasso, 
+  x = log(test_x + 1),
   probability = TRUE
 )
 ```
@@ -154,15 +147,16 @@ y_hat_alasso <- linear_model_predict(
 ```{r}
 roc_lasso <- roc(test_y, y_hat_lasso)
 roc_alasso <- roc(test_y, y_hat_alasso)
-# as expected alasso selects less features
 ```
-
 
 # LASSO vs. ALASSO
 
-```{r, echo = FALSE}
-plot_roc(list(roc_lasso, roc_alasso), legend = c("LASSO", "ALASSO"),
-         method_index = c(1,2))
+```{r, echo=FALSE}
+plot_roc(
+  list(roc_lasso, roc_alasso), 
+  legend = c("LASSO", "ALASSO"), 
+  method_index = c(1,2)
+)
 ```
 
 # LASSO vs. ALASSO at FPR = 0.10
@@ -177,38 +171,43 @@ get_roc_parameter(0.1, roc_full_lasso)
 roc_full_alasso <- get_roc(y_true = test_y, y_score = y_hat_alasso) %>% data.frame()
 get_roc_parameter(0.1, roc_full_alasso)
 ```
+
 # LASSO vs. ALASSO with different training set size
+
 - Randomly sample training size = 50, 70, 90
 - Use the remaining data as the test set 
 - Repeat 600 times
 
 ```{r, cache=TRUE}
 auc_supervised <- validate_supervised(
-  dat = labeled_data, nsim = 600,
-  n.train = c(50, 70, 90)
+  dat = labeled_data, 
+  nsim = 600, 
+  ntrain = c(50, 70, 90)
 )
 ```
 
 # LASSO vs. ALASSO with different training set size
 
-```{r, echo = FALSE}
-plot_sims(auc_supervised, legend = c("LASSO", "ALASSO"), method_index = c(1,2))
+```{r, echo=FALSE}
+plot_sims(
+  auc_supervised, 
+  legend = c("LASSO", "ALASSO"), 
+  method_index = c(1,2)
+)
 ```
 
 # Random Forest and SVM
 
 \tiny
 ```{r}
-# Random forest
+# Random forest.
 model_rf <- rfsrc(y ~ ., data = data.frame(y = train_y, x = train_x))
-y_hat_rf <- predict(model_rf,
-  newdata = data.frame(x = test_x)
-)$predicted
+y_hat_rf <- predict(model_rf, newdata = data.frame(x = test_x))$predicted
 roc_rf <- roc(test_y, y_hat_rf)
 ```
 
 ```{r}
-# SVM
+# SVM.
 model_svm <- SVMMaj::svmmaj(X = train_x, y = train_y)
 y_hat_svm <- predict(model_svm, test_x)
 roc_svm <- roc(test_y, y_hat_svm)
@@ -216,12 +215,14 @@ roc_svm <- roc(test_y, y_hat_svm)
 
 # ROC curves
 
-```{r, echo = FALSE}
-plot_roc(list(roc_lasso, roc_alasso, roc_rf, roc_svm), 
-         legend = c("LASSO", "ALASSO", "Random Forest", "SVM"),
-         method_index = c(1,2,3,4))
+```{r, echo=FALSE}
+plot_roc(
+  list(roc_lasso, roc_alasso, roc_rf, roc_svm), 
+  legend = c("LASSO", "ALASSO", "Random Forest", "SVM"),
+  method_index = c(1,2,3,4)
+)
 ```
 
-```{r, eval = F, include=FALSE}
+```{r, eval=TRUE, include=FALSE}
 save(list = ls(), file = "../module3/environment.RData")
 ```
