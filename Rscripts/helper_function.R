@@ -375,10 +375,10 @@ linear_model_predict <- function(beta, x, probability = FALSE) {
   y
 }
 
-validate_supervised <- function(dat, nsim, n.train = c(50, 70, 90)) {
+validate_supervised <- function(dat, nsim, ntrain = c(50, 70, 90)) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234 + n)
-    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.x <- lapply(ntrain, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
@@ -446,7 +446,7 @@ twostep_pred <- function(train_data, test_data, X, S, beta.step1) {
   y_hat.ss <- plogis(mu)
 }
 
-validate_phecap <- function(dat, surrogates, feature_selected, nsim, n.train = c(50, 70, 90)) {
+validate_phecap <- function(dat, surrogates, feature_selected, nsim, ntrain = c(50, 70, 90)) {
   
   surrogate_matrix <- sapply(surrogates, function(surrogate) {
     rowSums(PheCAP::ehr_data[, surrogate$variable_names, drop = FALSE])
@@ -468,7 +468,7 @@ validate_phecap <- function(dat, surrogates, feature_selected, nsim, n.train = c
   
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234 + n)
-    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.x <- lapply(ntrain, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
@@ -501,10 +501,10 @@ validate_phecap <- function(dat, surrogates, feature_selected, nsim, n.train = c
   return(temp)
 }
 
-validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
+validate_ss <- function(dat, nsim, ntrain = c(50, 70, 90), beta, x, S) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234 + n)
-    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.x <- lapply(ntrain, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
@@ -531,10 +531,10 @@ validate_ss <- function(dat, nsim, n.train = c(50, 70, 90), beta, x, S) {
 }
 
 
-validate_svmandrf <- function(dat, nsim, n.train = c(50, 70, 90)) {
+validate_svmandrf <- function(dat, nsim, ntrain = c(50, 70, 90)) {
   temp <- parallel::mclapply(1:nsim, FUN = function(n) {
     set.seed(1234 + n)
-    id.x <- lapply(n.train, function(n) sample(dat$patient_id, size = n))
+    id.x <- lapply(ntrain, function(n) sample(dat$patient_id, size = n))
     id.y <- lapply(id.x, function(i) {
       sample(dat$patient_id[which(!(dat$patient_id %in% i))], 46)
     })
