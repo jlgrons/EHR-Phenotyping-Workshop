@@ -50,7 +50,7 @@ beta_step1 <- adaptive_lasso_fit(
   y = S[], # surrogate
   x = x[], # all X
   family = "gaussian",
-  tuning = "ic"
+  tuning = "cv"
 )
 ```
 
