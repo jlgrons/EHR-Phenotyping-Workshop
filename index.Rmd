@@ -27,20 +27,21 @@ knitr::opts_chunk$set(echo = FALSE)
 
 This website contains materials for Biostatistics Workshop in [2022 SSC Annual Meeting Online](https://ssc.ca/en/meetings/annual/2022-annual-meeting). 
 
-In this workshop, we will introduce statistical learning methods designed to expedite the phenotyping process in order to improve the scalability of EHR research. 
+In this workshop, we will introduce statistical learning methods designed to expedite the phenotyping process to improve the scalability of EHR research. 
 
-- **Module 1** Exploratory data analysis (EDA) ([Exerciese 1](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_phecap.pdf))
+- **Module 1** Introduction [[Slides](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_slides.pdf)] [[Rmd](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_slides.Rmd)]
 
-- **Module 2** Supervised learning model fitting and evaluation  ([Exerciese 2](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module2/module2_phecap.pdf))
+- **Module 2** Supervised learning [[Slides](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module2/module2_slides.pdf)] [[Rmd](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module2/module2_slides.Rmd)]
 
-- **Module 3** Semi-supervised learning model fitting and evaluation  ([Exerciese 3](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module3/module3_phecap.pdf)) 
+- **Module 3** Semi-supervised learning (PheCAP)  [[Slides](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module3/module3_slides.pdf)] [[Rmd](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module3/module3_slides.Rmd)]
 
-- **Module 4** Semi-supervised and weakly-supervised learning model fitting and evaluation  ([Exerciese 4](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module4/module4_phecap.pdf))
+- **Module 4** Alternative approaches  [[Slides](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module4/module4_slides.pdf)] [[Rmd](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module4/module4_slides.Rmd)]
+
 
 
 ### PheCAP
 
-We will use the real EHR data examples from [PheCAP](https://celehs.github.io/PheCAP/), an R package that implements high-throughput phenotyping with electronic health record (EHR) using a common automated pipeline. 
+We will use the real EHR data examples from [PheCAP](https://celehs.github.io/PheCAP/), an R package that implements high-throughput phenotyping with electronic health records (EHRs) using a common automated pipeline. 
 
 ### Required packages
 
@@ -57,11 +58,8 @@ packages <- c(
 	  "PheNorm",  
 	  "MAP", 
 	  "glmnet",     
-	  "glmpath",  
-	  "mclust",
 	  "tidyverse",  
 	  "ggplot2",  
-	  "corrplot",
 	  "data.table", 
 	  "mltools",  
 	  "pROC",
