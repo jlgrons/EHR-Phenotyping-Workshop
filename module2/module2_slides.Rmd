@@ -166,7 +166,8 @@ ggroc(list(roc_lasso, roc_alasso), legacy.axes = TRUE) +
     paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
     paste("ALASSO, AUC =", round(auc(roc_alasso), 3))
   )) + theme(legend.position = "bottom") +
-  ggtitle("The operating receiver characteristic (ROC) curve")
+  ggtitle("The operating receiver characteristic (ROC) curve") + 
+  guides(color = guide_legend(title = element_blank()))
 
 ## Please change ROC plots to TPR and FPR so it matches the output
 ## Unify the format for all plots -titles, colors, axis, etc
@@ -248,5 +249,5 @@ ggroc(list(roc_lasso, roc_alasso, roc_rf, roc_svm), legacy.axes = TRUE) +
     paste("SVM, AUC =", round(auc(roc_svm), 3))
   )) + theme(legend.position = "bottom") +
   ggtitle("The operating receiver characteristic (ROC) curve") + 
-  guides(color = guide_legend(ncol = 2))
+  guides(color = guide_legend(ncol = 2, title = element_blank()))
 ```
