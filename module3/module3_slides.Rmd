@@ -31,7 +31,7 @@ package.check <- lapply(
 source("../Rscripts/helper_function.R")
 
 # Load data. 
-load("environment.RData")
+load("../module3/environment.RData")
 ```
 
 # Surrogates for CAD
@@ -121,7 +121,9 @@ roc_phecap <- roc(test_y, y_hat_phecap)
 # Supervised learning (LASSO, ALASSO) vs. PheCAP 
 
 ```{r, echo = FALSE}
-plot_roc(list(roc_lasso, roc_alasso, roc_phecap), legend = c("LASSO", "ALASSO", "PheCAP"))
+plot_roc(list(roc_lasso, roc_alasso, roc_phecap), 
+         legend = c("LASSO", "ALASSO", "PheCAP"),
+         method_index = c(1,2,5))
 ```
 
 # Supervised learning (LASSO, ALASSO) vs. PheCAP at FPR = 0.10
@@ -154,7 +156,9 @@ auc_phecap <- validate_phecap(dat = labeled_data,
 # Supervised learning vs. PheCAP for different training size
 
 ```{r, echo = FALSE}
-plot_sims(cbind(auc_supervised, auc_phecap), legend = c("LASSO", "ALASSO", "PheCAP"))
+plot_sims(cbind(auc_supervised, auc_phecap), 
+          legend = c("LASSO", "ALASSO", "PheCAP"),
+          method_index = c(1,2,5))
 ```
 
 ```{r, echo = FALSE, eval = FALSE}
