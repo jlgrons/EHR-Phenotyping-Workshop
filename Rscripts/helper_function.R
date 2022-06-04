@@ -5,7 +5,7 @@ library(glmpath)
 ################### Plotting  ###################################
 #################################################################
 
-plot_roc <- function(rocs,legend, n_total_method = 7) {
+plot_roc <- function(rocs,legend, n_total_method = 7, method_index) {
   
   label_text <- c()
   for (i in c(1:length(rocs))) {
@@ -13,7 +13,7 @@ plot_roc <- function(rocs,legend, n_total_method = 7) {
   }
   
   ggroc(rocs, legacy.axes = TRUE) +
-    scale_colour_manual(values = scales::hue_pal()(n_total_method)[1:length(legend)], 
+    scale_colour_manual(values = scales::hue_pal()(n_total_method)[method_index], 
                         labels = label_text) +
     theme(legend.position = "bottom", text = element_text(size = 20)) +
     ggtitle("The operating receiver characteristic (ROC) curve") + 
