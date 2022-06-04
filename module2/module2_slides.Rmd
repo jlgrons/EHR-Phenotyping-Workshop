@@ -31,9 +31,6 @@ package.check <- lapply(
     }
   }
 )
-
-# load environment from example 1
-load("environment.RData")
 ```
 
 
@@ -103,7 +100,7 @@ length(test_y)
 
 ```{r}
 # Choose best lambda using CV
-beta.lasso <- lasso_fit(
+beta_lasso <- lasso_fit(
   x = log(train_x + 1), y = train_y,
   tuning = "cv", family = "binomial"
 )
@@ -112,52 +109,51 @@ beta.lasso <- lasso_fit(
 \tiny
 ```{r}
 # Features Selected
-names(beta.lasso[abs(beta.lasso) > 0])[-1]
+names(beta_lasso[abs(beta_lasso) > 0])[-1]
 ```
 
 # ALASSO logistic regression
-
+\tiny
 ```{r}
 # Fit Adaptive LASSO
-beta.alasso <- adaptive_lasso_fit(
+beta_alasso <- adaptive_lasso_fit(
   x = log(train_x + 1), y = train_y,
   tuning = "cv", family = "binomial"
 )
 ```
 
-\tiny
-```{r}
-# ALASSO features selected - we show the features, please also print out the standardized coefficients so we can see relative magnitudes.
 
-names(beta.alasso[abs(beta.alasso) > 0])[-1]
+```{r}
+# ALASSO features selected 
+beta_alasso[!beta_alasso == 0][-1]
 ```
 
 ```{r}
 # LASSO features selected
-names(beta.lasso[abs(beta.lasso) > 0])[-1]
+beta_lasso[!beta_lasso==0][-1]
 ```
 
 # Get model predictions + ROC curve
 
 ```{r}
 # Prediction on testing set (LASSO)
-y_hat.lasso <- linear_model_predict(
-  beta = beta.lasso, x = log(test_x + 1),
+y_hat_lasso <- linear_model_predict(
+  beta = beta_lasso, x = log(test_x + 1),
   probability = TRUE
 )
 ```
 
 ```{r}
 # Prediction on testing set (ALASSO)
-y_hat.alasso <- linear_model_predict(
-  beta = beta.alasso, x = log(test_x + 1),
+y_hat_alasso <- linear_model_predict(
+  beta = beta_alasso, x = log(test_x + 1),
   probability = TRUE
 )
 ```
 
 ```{r}
-roc.lasso <- roc(test_y, y_hat.lasso)
-roc.alasso <- roc(test_y, y_hat.alasso)
+roc_lasso <- roc(test_y, y_hat_lasso)
+roc_alasso <- roc(test_y, y_hat_alasso)
 # as expected alasso selects less features
 ```
 
@@ -165,16 +161,12 @@ roc.alasso <- roc(test_y, y_hat.alasso)
 # LASSO vs. ALASSO
 
 ```{r, echo = FALSE}
-plot(roc.lasso,
-  print.auc = TRUE, main = paste0("n_training = ", nrow(train_x))
-)
-plot(roc.alasso,
-  print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
-)
-legend(0, 0.2,
-  legend = c("LASSO", "ALASSO"), col = c("black", "red"),
-  lty = 1, cex = 0.8
-)
+ggroc(list(roc_lasso, roc_alasso), legacy.axes = TRUE) +
+  scale_color_discrete(labels = c(
+    paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
+    paste("ALASSO, AUC =", round(auc(roc_alasso), 3))
+  )) + theme(legend.position = "bottom") +
+  ggtitle("The operating receiver characteristic (ROC) curve")
 
 ## Please change ROC plots to TPR and FPR so it matches the output
 ## Unify the format for all plots -titles, colors, axis, etc
@@ -188,13 +180,13 @@ legend(0, 0.2,
 
 \tiny
 ```{r}
-roc_full.lasso <- get_roc(y_true = test_y, y_score = y_hat.lasso) %>% data.frame()
-get_roc_parameter(0.1, roc_full.lasso)
+roc_full_lasso <- get_roc(y_true = test_y, y_score = y_hat_lasso) %>% data.frame()
+get_roc_parameter(0.1, roc_full_lasso)
 ```
 
 ```{r}
-roc_full.alasso <- get_roc(y_true = test_y, y_score = y_hat.alasso) %>% data.frame()
-get_roc_parameter(0.1, roc_full.alasso)
+roc_full_alasso <- get_roc(y_true = test_y, y_score = y_hat_alasso) %>% data.frame()
+get_roc_parameter(0.1, roc_full_alasso)
 ```
 # LASSO vs. ALASSO with different training set size
 - Randomly sample training size = 50, 70, 90
@@ -211,19 +203,16 @@ auc_supervised <- validate_supervised(
 # LASSO vs. ALASSO with different training set size
 
 ```{r, echo = FALSE}
-par(mfrow = c(1, 3))
-boxplot(auc_supervised %>% select(starts_with("n=50")),
-  ylim = c(0.5, 1),
-  names = c("LASSO", "ALASSO"), main = "n=50"
-)
-boxplot(auc_supervised %>% select(starts_with("n=70")),
-  ylim = c(0.5, 1),
-  names = c("LASSO", "ALASSO"), main = "n=70"
-)
-boxplot(auc_supervised %>% select(starts_with("n=90")),
-  ylim = c(0.5, 1),
-  names = c("LASSO", "ALASSO"), main = "n=90"
-)
+tidyr::gather(auc_supervised) %>%
+  mutate(
+    n = gsub(",.*$", "", key),
+    method = sub(".*,\\s*", "", key)
+  ) %>%
+  ggplot(aes(y = value, color = method)) +
+  geom_boxplot(outlier.shape = NA) +
+  facet_wrap(. ~ n) +
+  ggtitle("Area under the ROC curve (AUC) from 600 simulations") +
+  theme(legend.position = "bottom", axis.text.x = element_blank(), axis.ticks = element_blank())
 
 # Use ggplot
 # Remove outlier for box plot
@@ -235,42 +224,29 @@ boxplot(auc_supervised %>% select(starts_with("n=90")),
 ```{r}
 # Random forest
 model_rf <- rfsrc(y ~ ., data = data.frame(y = train_y, x = train_x))
-y_hat.rf <- predict(model_rf, 
-                    newdata = data.frame(x = test_x))$predicted
-roc.rf <- roc(test_y, y_hat.rf)
-# Use the Phecap functions to compute lasso, alssso etc and be consistnet
-# clean the helper functions to only have what you need
-# same for packages
-# Make sure the slides match the markdown - please update
+y_hat_rf <- predict(model_rf,
+  newdata = data.frame(x = test_x)
+)$predicted
+roc_rf <- roc(test_y, y_hat_rf)
 ```
 
 ```{r}
 # SVM
 model_svm <- SVMMaj::svmmaj(X = train_x, y = train_y)
-y_hat.svm <- predict(model_svm, test_x)
-roc.svm <- roc(test_y, y_hat.svm)
+y_hat_svm <- predict(model_svm, test_x)
+roc_svm <- roc(test_y, y_hat_svm)
 ```
 
 # ROC curves
 
 ```{r, echo = FALSE}
-roc.svm <- roc(test_y, y_hat.svm)
-
-plot(roc.lasso,
-  print.auc = TRUE, main = paste0("n_training = ", nrow(train_x))
-)
-plot(roc.alasso,
-  print.auc = TRUE, col = "red", add = TRUE, print.auc.y = 0.4
-)
-plot(roc.rf,
-  print.auc = TRUE, col = "grey", add = TRUE, print.auc.y = 0.3
-)
-plot(roc.svm,
-  print.auc = TRUE, col = "pink", add = TRUE, print.auc.y = 0.2
-)
-legend(0, 0.5,
-  legend = c("LASSO", "ALASSO", "Random Forest", "SVM"),
-  col = c("black", "red", "grey", "pink"),
-  lty = 1, cex = 0.5
-)
+ggroc(list(roc_lasso, roc_alasso, roc_rf, roc_svm), legacy.axes = TRUE) +
+  scale_color_discrete(labels = c(
+    paste("LASSO, AUC =", round(auc(roc_lasso), 3)),
+    paste("Random Forest, AUC =", round(auc(roc_rf), 3)),
+    paste("ALASSO, AUC =", round(auc(roc_alasso), 3)),
+    paste("SVM, AUC =", round(auc(roc_svm), 3))
+  )) + theme(legend.position = "bottom") +
+  ggtitle("The operating receiver characteristic (ROC) curve") + 
+  guides(color = guide_legend(ncol =2))
 ```
