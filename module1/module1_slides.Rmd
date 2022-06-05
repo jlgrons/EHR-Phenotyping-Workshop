@@ -110,7 +110,7 @@ ehr_data[, feature_index] %>%
 
 - We orthogonalize all features against health care utilization for Module 2
 
-(Please find more details in the `.Rmd` file.)
+Details can be found in the `.Rmd` file.
 
 ```{r, echo=FALSE}
 # Log transformed the features. 
