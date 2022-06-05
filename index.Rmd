@@ -27,9 +27,13 @@ knitr::opts_chunk$set(echo = FALSE)
 
 This website contains materials for Biostatistics Workshop at the [2022 SSC Annual Meeting Online](https://ssc.ca/en/meetings/annual/2022-annual-meeting). 
 
-In this workshop, we introduce methods for phenotyping with electronic health record (EHR) data.  Slides and code can be found for an example phenotyping problem below.
+In this workshop, we introduce methods for phenotyping with electronic health record (EHR) data.  
 
 - Electronic health records phenotyping [[Slides](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/slides/SSC_Workshop.pdf)]
+
+<br>
+
+Slides and code can be found for an example phenotyping problem below.
 
 - **Module 1** Introduction [[Slides](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_slides.pdf)] [[Rmd](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_slides.Rmd)]
 
