@@ -39,26 +39,51 @@ data <- PhecapData(
   PheCAP::ehr_data, "healthcare_utilization", "label", 75,
   patient_id = "patient_id", seed = 123
 )
+```
 
+
+```{r, echo=FALSE}
+# Log transformed the features. 
+features <- ehr_data[, c(3:ncol(ehr_data))]
+features <- log(features + 1)
+
+# Orthogonalize the features. 
+ other_features <- features[, -3]
+ # Orthogonalize. 
+ orthognalized_features <- qr.resid(qr(cbind(1, features$healthcare_utilization)), 
+                                   as.matrix(other_features))
+
+# Save the transformed features. 
+# Please note that in the beginning of module 2, the transformation is also performed.
+ehr_data_transformed <- cbind(
+  patient_id = ehr_data$patient_id,
+  label = ehr_data$label, 
+  healthcare_utilization =features$healthcare_utilization, 
+  orthognalized_features
+) 
+```
+
+
+```{r, echo=FALSE}
 # Data with non-missing labels.
-labeled_data <- ehr_data %>% dplyr::filter(!is.na(label))
+labeled_data <- ehr_data_transformed %>% dplyr::filter(!is.na(label))
 
 # All features.
-all_x <- ehr_data %>% dplyr::select(
+all_x <- ehr_data_transformed %>% dplyr::select(
   starts_with("COD"), starts_with("NLP"),
   starts_with("main"), healthcare_utilization
   )
-health_count <- ehr_data$healthcare_utilization
+health_count <- ehr_data_transformed$healthcare_utilization
 
 # Training set.
-train_data <- ehr_data %>% dplyr::filter(patient_id %in% data$training_set)
+train_data <- ehr_data_transformed %>% dplyr::filter(patient_id %in% data$training_set)
 train_x <- train_data %>%
   dplyr::select(starts_with("COD"), starts_with("NLP"),
                 starts_with("main"), healthcare_utilization) %>% as.matrix()
 train_y <- train_data %>% dplyr::select(label) %>% pull()
 
 # Testing set.
-test_data <- ehr_data %>% dplyr::filter(patient_id %in% data$validation_set)
+test_data <- ehr_data_transformed %>% dplyr::filter(patient_id %in% data$validation_set)
 test_x <- test_data %>%
   dplyr::select(starts_with("COD"), starts_with("NLP"),
                 starts_with("main"), healthcare_utilization) %>% as.matrix()
@@ -88,7 +113,7 @@ length(test_y)
 ```{r}
 # Choose best lambda using CV.
 beta_lasso <- lasso_fit(
-  x = log(train_x + 1), 
+  x = train_x, 
   y = train_y, 
   tuning = "cv", 
   family = "binomial"
@@ -107,7 +132,7 @@ names(beta_lasso[abs(beta_lasso) > 0])[-1]
 ```{r}
 # Fit Adaptive LASSO.
 beta_alasso <- adaptive_lasso_fit(
-  x = log(train_x + 1), 
+  x = train_x, 
   y = train_y, 
   tuning = "cv", 
   family = "binomial"
@@ -130,7 +155,7 @@ beta_lasso[!beta_lasso == 0][-1]
 # Prediction on testing set (LASSO).
 y_hat_lasso <- linear_model_predict(
   beta = beta_lasso, 
-  x = log(test_x + 1), 
+  x = test_x, 
   probability = TRUE
 )
 ```
@@ -139,7 +164,7 @@ y_hat_lasso <- linear_model_predict(
 # Prediction on testing set (ALASSO).
 y_hat_alasso <- linear_model_predict(
   beta = beta_alasso, 
-  x = log(test_x + 1),
+  x = test_x,
   probability = TRUE
 )
 ```
