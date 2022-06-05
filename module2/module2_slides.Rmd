@@ -203,7 +203,7 @@ get_roc_parameter(0.1, roc_full_alasso)
 - Use the remaining data as the test set 
 - Repeat 600 times
 
-```{r, cache=TRUE}
+```{r, cache=FALSE}
 auc_supervised <- validate_supervised(
   dat = labeled_data, 
   nsim = 600, 
