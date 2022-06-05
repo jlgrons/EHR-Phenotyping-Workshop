@@ -3,24 +3,24 @@
     {
       "path": "index.html",
       "title": "Electronic Health Records Phenotyping",
-      "description": "SSC Annual Meeting 2022 Biostatistics Workshop\n",
+      "description": "SSC Annual Meeting 2022, Biostatistics Workshop\n",
       "author": [
         {
-          "name": "Jessica Gronsbell, Ph.D.",
+          "name": "Jesse Gronsbell, Ph.D.",
           "url": "https://sites.google.com/view/jgronsbell/home?authuser=0"
-        },
-        {
-          "name": "Siyue Yang",
-          "url": {}
         },
         {
           "name": "Jianhui Gao",
           "url": {}
+        },
+        {
+          "name": "Siyue Yang",
+          "url": {}
         }
       ],
       "date": "June 5th, 2022",
-      "contents": "\nWelcome\nThis website contains materials for Biostatistics Workshop in 2022 SSC Annual Meeting Online.\nIn this workshop, we will introduce statistical learning methods designed to expedite the phenotyping process to improve the scalability of EHR research.\nModule 1 Introduction [Slides] [Rmd]\nModule 2 Supervised learning [Slides] [Rmd]\nModule 3 Semi-supervised learning (PheCAP) [Slides] [Rmd]\nModule 4 Alternative approaches [Slides] [Rmd]\nPheCAP\nWe will use the real EHR data examples from PheCAP, an R package that implements high-throughput phenotyping with electronic health records (EHRs) using a common automated pipeline.\nRequired packages\nHere is a list of packages that will be used during the workshop.\nPlease copy and paste the following code into R Console to check and load the packages.\nWe are using R version (\\(\\geq\\) 3.6.0).\n\n\n# Specify the packages from CRAN.\npackages <- c(\n    \"PheCAP\",     \n    \"PheNorm\",  \n    \"MAP\", \n    \"glmnet\",     \n    \"tidyverse\",  \n    \"ggplot2\",  \n    \"data.table\", \n    \"mltools\",  \n    \"pROC\",\n    \"parallel\",\n    \"randomForestSRC\",\n    \"SVMMaj\"\n)\n\n# Load the packages.\n# Missing package(s) will be first installed and loaded.  \npackage.check <- lapply(\n  packages,\n  FUN = function(x) {\n    if (!require(x, character.only = TRUE)) {\n      install.packages(x, dependencies = TRUE)\n      library(x, character.only = TRUE)\n    }\n  }\n)\n\n\n\nImplementation\nTo start with, please git clone the repository to local.\n\ngit clone git@github.com:jlgrons/EHR-Phenotyping-Workshop.git\n\nResources\nPublicly available EHR dataset\nPhysioNet\nNational NLP Clinical Challenges (n2c2) NLP competitions\n\nNLP software\ncTAKES\nclinspacy\nmedspacy\n\nAcknowledgments\nThis website was made with the distill package, drawn mostly from Silvia Canelón’s Sharing Your Work with xaringan.\n\n\n\n",
-      "last_modified": "2022-06-04T03:27:21-04:00"
+      "contents": "\nWelcome\nThis website contains materials for Biostatistics Workshop at the 2022 SSC Annual Meeting Online.\nIn this workshop, we introduce methods for phenotyping with electronic health record (EHR) data. Slides and code can be found for an example phenotyping problem below.\nElectronic health records phenotyping [Slides]\nModule 1 Introduction [Slides] [Rmd]\nModule 2 Supervised learning [Slides] [Rmd]\nModule 3 Semi-supervised learning (PheCAP) [Slides] [Rmd]\nModule 4 Alternative approaches [Slides] [Rmd]\nPheCAP\nWe use real EHR data from PheCAP, an R package that implements high-throughput phenotyping using a common automated pipeline.\nRequired packages\nPlease copy and paste the following code into R Console to check and load the packages. We are using R version \\(\\geq\\) 3.6.0.\n\n\n# Specify the packages from CRAN.\npackages <- c(\n    \"PheCAP\",     \n    \"PheNorm\",  \n    \"MAP\", \n    \"glmnet\",     \n    \"tidyverse\",  \n    \"ggplot2\",  \n    \"data.table\", \n    \"mltools\",  \n    \"pROC\",\n    \"parallel\",\n    \"randomForestSRC\",\n    \"SVMMaj\"\n)\n\n# Load the packages.\n# Missing package(s) will be first installed and loaded.  \npackage.check <- lapply(\n  packages,\n  FUN = function(x) {\n    if (!require(x, character.only = TRUE)) {\n      install.packages(x, dependencies = TRUE)\n      library(x, character.only = TRUE)\n    }\n  }\n)\n\n\n\nImplementation\nTo start with, please git clone the repository to local.\n\ngit clone git@github.com:jlgrons/EHR-Phenotyping-Workshop.git\n\nResources\nPublicly available EHR dataset\nPhysioNet\nNational NLP Clinical Challenges (n2c2) NLP competitions\n\nNLP software\ncTAKES\nclinspacy\nmedspacy\n\nAcknowledgments\nThis website was made with the distill package, drawn mostly from Silvia Canelón’s Sharing Your Work with xaringan.\n\n\n\n",
+      "last_modified": "2022-06-05T09:47:25-04:00"
     }
   ],
   "collections": []
