@@ -1,9 +1,9 @@
 ---
 title: "Electronic Health Records Phenotyping"
 description: |
-  SSC Annual Meeting 2022 Biostatistics Workshop
+  SSC Annual Meeting 2022, Biostatistics Workshop
 author: 
-- name: Jessica Gronsbell, Ph.D.
+- name: Jesse Gronsbell, Ph.D.
   url: https://sites.google.com/view/jgronsbell/home?authuser=0
   affiliation: University of Toronto
   affiliation_url: https://www.statistics.utoronto.ca/
@@ -25,9 +25,9 @@ knitr::opts_chunk$set(echo = FALSE)
 
 # Welcome
 
-This website contains materials for Biostatistics Workshop in [2022 SSC Annual Meeting Online](https://ssc.ca/en/meetings/annual/2022-annual-meeting). 
+This website contains materials for Biostatistics Workshop at the [2022 SSC Annual Meeting Online](https://ssc.ca/en/meetings/annual/2022-annual-meeting). 
 
-In this workshop, we will introduce statistical learning methods designed to expedite the phenotyping process to improve the scalability of EHR research. 
+In this workshop, we introduce methods for phenotyping with electronic health record (EHR) data.  Slides and code can be found for an example phenotyping problem below.
 
 - **Module 1** Introduction [[Slides](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_slides.pdf)] [[Rmd](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_slides.Rmd)]
 
@@ -41,15 +41,11 @@ In this workshop, we will introduce statistical learning methods designed to exp
 
 ### PheCAP
 
-We will use the real EHR data examples from [PheCAP](https://celehs.github.io/PheCAP/), an R package that implements high-throughput phenotyping with electronic health records (EHRs) using a common automated pipeline. 
+We use real EHR data from [PheCAP](https://celehs.github.io/PheCAP/), an R package that implements high-throughput phenotyping using a common automated pipeline. 
 
 ### Required packages
 
-Here is a list of packages that will be used during the workshop. 
-
-Please copy and paste the following code into R Console to check and load the packages. 
-
-We are using R version ($\geq$ 3.6.0).
+Please copy and paste the following code into R Console to check and load the packages. We are using R version $\geq$ 3.6.0.
 
 ```{r, eval=FALSE, echo=TRUE}
 # Specify the packages from CRAN.
