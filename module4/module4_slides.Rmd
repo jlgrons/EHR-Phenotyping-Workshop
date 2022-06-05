@@ -47,8 +47,8 @@ S <- log(ehr_data$main_ICD + ehr_data$main_NLP + 1)
 
 # Step 1.
 beta_step1 <- adaptive_lasso_fit(
-  y = S[], # surrogate
-  x = x[], # all X
+  y = S, # surrogate
+  x = x, # all X
   family = "gaussian",
   tuning = "cv"
 )

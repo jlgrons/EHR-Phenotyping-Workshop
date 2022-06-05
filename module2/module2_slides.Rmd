@@ -55,12 +55,12 @@ features <- log(features + 1)
 
 # Save the transformed features. 
 # Please note that in the beginning of module 2, the transformation is also performed.
-ehr_data_transformed <- cbind(
+ehr_data_transformed <- data.frame(cbind(
   patient_id = ehr_data$patient_id,
   label = ehr_data$label, 
   healthcare_utilization =features$healthcare_utilization, 
   orthognalized_features
-) 
+))
 ```
 
 
