@@ -41,9 +41,9 @@ the direction of beta.
 
 ```{r}
 # COD + NLP + HU.
-x <- log(ehr_data %>% select(starts_with("health") | 
-  starts_with("COD") | starts_with("NLP")) + 1) 
-S <- log(ehr_data$main_ICD + ehr_data$main_NLP + 1)
+x <- ehr_data_transformed %>% select(starts_with("health") | 
+  starts_with("COD") | starts_with("NLP"))
+S <- ehr_data_transformed$main_NLP 
 
 # Step 1.
 beta_step1 <- adaptive_lasso_fit(
@@ -56,7 +56,7 @@ beta_step1 <- adaptive_lasso_fit(
 
 # 2-step Semi-supervised Approach
 
-1. Regress the surrogate on the features with penalized least square to get the direction of beta.
+1. Regress the surrogate on the features with penalized least squares to get the direction of beta.
 
 2. Regress the outcome on the linear predictor to get the intercept and multiplier for the beta.
 
