@@ -29,7 +29,7 @@ This website contains materials for Biostatistics Workshop at the [2022 SSC Annu
 
 In this workshop, we introduce methods for phenotyping with electronic health record (EHR) data.  Slides and code can be found for an example phenotyping problem below.
 
-- Electronic health records phenotyping [[Slides]()]
+- Electronic health records phenotyping [[Slides](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/slides/SSC_Workshop.pdf)]
 
 - **Module 1** Introduction [[Slides](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_slides.pdf)] [[Rmd](https://github.com/jlgrons/EHR-Phenotyping-Workshop/blob/main/module1/module1_slides.Rmd)]
 
